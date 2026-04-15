@@ -1,0 +1,1 @@
+# Para obtener los assets del repo libgdx

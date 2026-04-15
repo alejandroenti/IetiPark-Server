@@ -1,0 +1,27 @@
+{
+  "name": "ietipark-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "node --watch app.js",
+    "pro": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alejandroenti/IetiPark-Server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/alejandroenti/IetiPark-Server/issues"
+  },
+  "homepage": "https://github.com/alejandroenti/IetiPark-Server#readme",
+  "dependencies": {
+    "mongodb": "^7.1.1",
+    "winston": "^3.19.0",
+    "ws": "^8.20.0"
+  }
+}
