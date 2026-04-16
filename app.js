@@ -1,43 +1,57 @@
 const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const Player = require('./src/player');
+const winston = require('winston');
 
-const wss = new WebSocketServer({ port: 3000 });
-console.log('WebSocket server is running on ws://localhost:3000');
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: './logs/server.log' })
+    ],
+});
+
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const players = [];
 
+const wss = new WebSocketServer({ port: 3000 });
+logger.info('WebSocket server is running on ws://localhost:3000');
 wss.on('connection', (ws) => {
-    console.log('Client connected');
+    logger.debug('Client connected');
 
     ws.on('message', (data) => {
-        // Parsear el mensaje recibido como JSON
+        // Parsear el mensaje recibido a JSON
         let message;
         try {
             message = JSON.parse(data);
+            logger.debug(`Correctly parsed the following message: ${message.toString()}`);
         } catch (error) {
-            console.error('Error parsing message:', error);
+            logger.error(`Error parsing message: ${error}`);
             return;
         }
 
         // Validar que el mensaje recibido tenga la estructura esperada
         const isValidStructured = validateStructureOf(message);
         if (!isValidStructured) {
-            console.error('Received message does not have the expected structure');
+            logger.info('Received message does not have the expected structure');
             return;
         }
-        
-        console.log(`Received message: ${message.toString()}`);
 
         // Actuar dependiendo del tipo de mensaje
         switch (message.type) {
             case "JOIN":
+                // Comprobar que caben nuevos jugadores
                 if (players.length >= MAX_PLAYERS) {
-                    sendMessage(ws, "REFUSED", "Número máximo de jugadores alcanzado")
+                    sendMessage(ws, "REFUSED", "Maximum number of players reached, you will not be added to game");
                     ws.close();
                     return;
                 }
+                // Crear nuevo jugador
                 const playerId = crypto.randomUUID()
                 const playerName = message.payload;
                 const newPlayer = new Player(
@@ -45,25 +59,40 @@ wss.on('connection', (ws) => {
                     playerName,
                     ws
                 );
+                logger.debug(`New Player object generated (playerId=${playerId}, playerName=${playerName})`);
+
+                // Añadir a la lista de jugadores
                 players.push(newPlayer);
-                console.log(`Se ha registrado el jugador: ${playerName}`);
-                sendMessage(ws, "JOIN_OK", "Has sigo registrado en el server.");
+                logger.info(`New registered player: ${playerName}`);
+
+                // Notificar a jugadores estado actual de la sala
+                sendMessage(ws, "JOIN_OK", "You have been succesfully registered");
                 broadcast("UPDATED PLAYERS", players.length.toString());
+                logger.debug(`All players have been notified with current room. Current Nº of Players: ${players.length}`);
                 if (players.length >= MIN_PLAYERS) {
-                    broadcast("MIN PLAYERS ACHIEVED", "Ya hay jugadores suficientes para comenzar una partida");
+                    broadcast("MIN PLAYERS ACHIEVED", "There are enough players to start the game");
                 }
                 break;
             default:
-                console.log(`Tipo de mensaje no esperado: ${message.type}`);
-                sendMessage(ws, "ERROR", "Tipo de mensaje no esperado por el server")
+                logger.info(`Unknown message TYPE recieved (type=${message.type})`);
+                sendMessage(ws, "UNKNOWN TYPE", "Server does not know how to handle this type of message");
                 break;
         }
     });
 
     ws.on('close', () => {
-        console.log('Cliente desconectado');
+        logger.info('Client disconnected');
         removePlayer(getPlayerFromSocket(ws));
         broadcast("UPDATED PLAYERS", players.length.toString());
+    });
+
+    ws.on('error', () => {
+        logger.error('Error in connection with a WebSocket');
+        player = getPlayerFromSocket(ws);
+        if (player !== null) {
+            removePlayer(player);
+            logger.debug(`Player with gameId=${player.gameId} & name=${player.name} removed from players due to connection error`);
+        }
     });
 });
 
