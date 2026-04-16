@@ -1,7 +1,7 @@
 meta {
-  name: NOT VALID OBJECT message
+  name: JOIN type
   type: ws
-  seq: 3
+  seq: 1
 }
 
 ws {
@@ -14,6 +14,9 @@ body:ws {
   name: message 1
   type: json
   content: '''
-    {invalido}
+    {
+      {{TYPE}}: "JOIN",
+      {{PAYLOAD}}: "pepe"
+    }
   '''
 }
