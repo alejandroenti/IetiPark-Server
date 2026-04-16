@@ -45,33 +45,7 @@ wss.on('connection', (ws) => {
         // Actuar dependiendo del tipo de mensaje
         switch (message.type) {
             case "JOIN":
-                // Comprobar que caben nuevos jugadores
-                if (players.length >= MAX_PLAYERS) {
-                    sendMessage(ws, "REFUSED", "Maximum number of players reached, you will not be added to game");
-                    ws.close();
-                    return;
-                }
-                // Crear nuevo jugador
-                const playerId = crypto.randomUUID()
-                const playerName = message.payload;
-                const newPlayer = new Player(
-                    playerId,
-                    playerName,
-                    ws
-                );
-                logger.debug(`New Player object generated (playerId=${playerId}, playerName=${playerName})`);
-
-                // Añadir a la lista de jugadores
-                players.push(newPlayer);
-                logger.info(`New registered player: ${playerName}`);
-
-                // Notificar a jugadores estado actual de la sala
-                sendMessage(ws, "JOIN_OK", "You have been succesfully registered");
-                broadcast("UPDATED PLAYERS", players.length.toString());
-                logger.debug(`All players have been notified with current room. Current Nº of Players: ${players.length}`);
-                if (players.length >= MIN_PLAYERS) {
-                    broadcast("MIN PLAYERS ACHIEVED", "There are enough players to start the game");
-                }
+                handleJoin();
                 break;
             default:
                 logger.info(`Unknown message TYPE recieved (type=${message.type})`);
@@ -165,4 +139,38 @@ function sendMessage(ws, type, payload) {
         payload: payload
     });
     ws.send(message);
+}
+
+/**
+ * Lógica para controlar los mensajes JOIN
+ * @returns 
+ */
+function handleJoin() {
+    // Comprobar que caben nuevos jugadores
+    if (players.length >= MAX_PLAYERS) {
+        sendMessage(ws, "REFUSED", "Maximum number of players reached, you will not be added to game");
+        ws.close();
+        return;
+    }
+    // Crear nuevo jugador
+    const playerId = crypto.randomUUID()
+    const playerName = message.payload;
+    const newPlayer = new Player(
+        playerId,
+        playerName,
+        ws
+    );
+    logger.debug(`New Player object generated (playerId=${playerId}, playerName=${playerName})`);
+
+    // Añadir a la lista de jugadores
+    players.push(newPlayer);
+    logger.info(`New registered player: ${playerName}`);
+
+    // Notificar a jugadores estado actual de la sala
+    sendMessage(ws, "JOIN_OK", "You have been succesfully registered");
+    broadcast("UPDATED PLAYERS", players.length.toString());
+    logger.debug(`All players have been notified with current room. Current Nº of Players: ${players.length}`);
+    if (players.length >= MIN_PLAYERS) {
+        broadcast("MIN PLAYERS ACHIEVED", "There are enough players to start the game");
+    }
 }
