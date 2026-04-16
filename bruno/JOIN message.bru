@@ -1,0 +1,22 @@
+meta {
+  name: JOIN message
+  type: ws
+  seq: 1
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: none
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {
+      {{TYPE}}: "hola",
+      {{PAYLOAD}}: "prueba con bruno"
+    }
+  '''
+}
