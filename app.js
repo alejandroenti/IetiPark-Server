@@ -7,8 +7,23 @@ wss.on('connection', (ws) => {
     console.log('Client connected');
 
     ws.on('message', (data) => {
-        const message = JSON.parse(data);
-        console.log(`Received message: ${data.toString()}`);
+        // Parsear el mensaje recibido como JSON
+        let message;
+        try {
+            message = JSON.parse(data);
+        } catch (error) {
+            console.error('Error parsing message:', error);
+            return;
+        }
+
+        // Validar que el mensaje recibido tenga la estructura esperada
+        const isValidStructured = validateStructureOf(message);
+        if (!isValidStructured) {
+            console.error('Received message does not have the expected structure');
+            return;
+        }
+        
+        console.log(`Received message: ${message.toString()}`);
     });
 
     ws.on('close', () => {
@@ -16,3 +31,21 @@ wss.on('connection', (ws) => {
     });
 });
 
+/**
+ * Valida que el JSON recibido tenga la estructura esperada: un campo "type" y un campo "payload".
+ * @param {Object} - El objeto JSON a validar
+ * @returns {boolean} true si la estructura es válida, false de lo contrario
+ */
+function validateStructureOf(data) {
+    if (!data || typeof data !== 'object') {
+        return false;
+    }
+    const keys = Object.keys(data);
+    if (keys.length !== 2) {
+        return false;
+    }
+    if (!keys.includes('type') || !keys.includes('payload')) {
+        return false;
+    }
+    return true;
+}

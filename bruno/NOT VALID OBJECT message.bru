@@ -1,0 +1,19 @@
+meta {
+  name: NOT VALID OBJECT message
+  type: ws
+  seq: 3
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {invalido}
+  '''
+}

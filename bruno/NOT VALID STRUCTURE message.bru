@@ -1,13 +1,13 @@
 meta {
-  name: JOIN message
+  name: NOT VALID STRUCTURE message
   type: ws
-  seq: 1
+  seq: 2
 }
 
 ws {
   url: {{URI}}
   body: ws
-  auth: none
+  auth: inherit
 }
 
 body:ws {
@@ -15,7 +15,7 @@ body:ws {
   type: json
   content: '''
     {
-      {{TYPE}}: "hola",
+      "CAMPO_INVALIDO": "hola",
       {{PAYLOAD}}: "prueba con bruno"
     }
   '''
