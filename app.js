@@ -157,7 +157,12 @@ function sendMessage(ws, type, payload) {
  * @returns 
  */
 function handleJoin(message, ws) {
-    // TODO: Comprobar que el player no está ya registrado
+    // Comprobar que el player no está ya registrado
+    if (getPlayerFromSocket(ws) !== undefined) {
+        sendMessage(ws, "REFUSED JOIN", "You are already registered");
+        logger.info('A player tried to join but was already registered');
+        return;
+    }
 
     // Comprobar que caben nuevos jugadores
     if (players.length >= MAX_PLAYERS) {
