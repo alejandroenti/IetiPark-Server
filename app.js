@@ -2,8 +2,14 @@ const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const Player = require('./src/player');
 const winston = require('winston');
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
 
+// .env correspondiente
+const envMode = process.env.NODE_ENV || 'dev';
+dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
+
+// Logger
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -16,6 +22,7 @@ const logger = winston.createLogger({
     ],
 });
 
+// Server
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const players = [];
@@ -58,6 +65,7 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         logger.info('Client disconnected');
         removePlayer(getPlayerFromSocket(ws));
+        removeGhostPlayers();
         broadcast("UPDATED PLAYERS", players.length.toString());
     });
 
@@ -68,6 +76,7 @@ wss.on('connection', (ws) => {
             removePlayer(player);
             logger.debug(`Player with gameId=${player.gameId} & name=${player.name} removed from players due to connection error`);
         }
+        removeGhostPlayers();
     });
 });
 
@@ -174,4 +183,26 @@ function handleJoin(message, ws) {
     if (players.length >= MIN_PLAYERS) {
         broadcast("MIN PLAYERS ACHIEVED", "There are enough players to start the game");
     }
+}
+
+/**
+ * Elimina de 'players' a todos los players cuyo Socket no está registrado por el server ("juegadores fantasma")
+ */
+function removeGhostPlayers() {
+    const playersSnapshot = getPlayersSnapshot();
+    const activeSockets = wss.clients;
+    for (const player of playersSnapshot) {
+        if (!activeSockets.has(player.ws)) {
+            logger.info(`Cleaning up ghost player: ${player.name}`);
+            removePlayer(player);
+        }
+    }
+}
+
+/**
+ * Devuelve una snapshot del estado actual de players
+ * @returns {Player[]} Array con una copia del contenido de 'players'
+ */
+function getPlayersSnapshot() {
+    return [...players];
 }

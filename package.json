@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "node --watch app.js",
-    "pro": "node app.js"
+    "dev": "cross-env NODE_ENV=dev node --watch app.js",
+    "production": "cross-env NODE_ENV=production node app.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/alejandroenti/IetiPark-Server#readme",
   "dependencies": {
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "mongodb": "^7.1.1",
     "winston": "^3.19.0",
