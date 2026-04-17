@@ -27,7 +27,7 @@ const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const players = [];
 
-const wss = new WebSocketServer({ port: process.env.SERVER_PORT });
+const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 wss.on('connection', (ws) => {
     logger.debug('Client connected');
@@ -36,7 +36,7 @@ wss.on('connection', (ws) => {
         // Parsear el mensaje recibido a JSON
         let message;
         try {
-            message = JSON.parse(data);
+            message = JSON.parse(data.toString());
             logger.debug(`Correctly parsed the following message: ${message.toString()}`);
         } catch (error) {
             logger.error(`Error parsing message: ${error}`);
@@ -71,7 +71,7 @@ wss.on('connection', (ws) => {
 
     ws.on('error', () => {
         logger.error('Error in connection with a WebSocket');
-        player = getPlayerFromSocket(ws);
+        const player = getPlayerFromSocket(ws);
         if (player !== null) {
             removePlayer(player);
             logger.debug(`Player with gameId=${player.gameId} & name=${player.name} removed from players due to connection error`);
@@ -82,7 +82,7 @@ wss.on('connection', (ws) => {
 
 /**
  * Valida que el JSON recibido tenga la estructura esperada: un campo "type" y un campo "payload".
- * @param {Object} - El objeto JSON a validar
+ * @param {Object} data - El objeto JSON a validar
  * @returns {boolean} true si la estructura es válida, false de lo contrario
  */
 function validateStructureOf(data) {
@@ -126,7 +126,7 @@ function removePlayer(playerToRemove) {
 
 /**
  * Obtiene un objeto Player de la lista de jugadores registrados a partir de su WebSocket
- * @param {WebSocket} ws 
+ * @param {import('ws').WebSocket} ws 
  * @returns 
  */
 function getPlayerFromSocket(ws) {
@@ -139,7 +139,7 @@ function getPlayerFromSocket(ws) {
 
 /**
  * Envía un mensaje a un socket con una estructura Type, Payload
- * @param {WebSocket} ws 
+ * @param {import('ws').WebSocket} ws 
  * @param {string} type 
  * @param {string} payload 
  */

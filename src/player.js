@@ -2,7 +2,7 @@ class Player {
     /**
      * @param {string} id - Identificador único.
      * @param {string} name - Nombre del jugador.
-     * @param {WebSocket} ws - La conexión WebSocket activa.
+     * @param {import('ws').WebSocket} ws - La conexión WebSocket activa.
      */
     constructor(id, name, ws) {
         this.id = id;
