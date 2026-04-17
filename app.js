@@ -160,6 +160,7 @@ function handleJoin(message, ws) {
     if (players.length >= MAX_PLAYERS) {
         sendMessage(ws, "REFUSED JOIN", "Maximum number of players reached");
         ws.close();
+        logger.info('A player tried to join but the room was full');
         return;
     }
     // Comprobar que el nombre del jugador no está repetido
@@ -167,6 +168,7 @@ function handleJoin(message, ws) {
     if (players.some(player => player.name === playerName)) {
         sendMessage(ws, "REFUSED JOIN", "Player name already taken");
         ws.close();
+        logger.info(`A player tried to join with a taken name: ${playerName}`);
         return;
     }
 
