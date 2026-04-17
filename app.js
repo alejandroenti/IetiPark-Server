@@ -158,13 +158,20 @@ function sendMessage(ws, type, payload) {
 function handleJoin(message, ws) {
     // Comprobar que caben nuevos jugadores
     if (players.length >= MAX_PLAYERS) {
-        sendMessage(ws, "REFUSED", "Maximum number of players reached, you will not be added to game");
+        sendMessage(ws, "REFUSED JOIN", "Maximum number of players reached");
         ws.close();
         return;
     }
+    // Comprobar que el nombre del jugador no está repetido
+    const playerName = message.payload;
+    if (players.some(player => player.name === playerName)) {
+        sendMessage(ws, "REFUSED JOIN", "Player name already taken");
+        ws.close();
+        return;
+    }
+
     // Crear nuevo jugador
     const playerId = crypto.randomUUID()
-    const playerName = message.payload;
     const newPlayer = new Player(
         playerId,
         playerName,
