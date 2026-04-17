@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/alejandroenti/IetiPark-Server#readme",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "mongodb": "^7.1.1",
     "winston": "^3.19.0",
     "ws": "^8.20.0"

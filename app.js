@@ -2,6 +2,7 @@ const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const Player = require('./src/player');
 const winston = require('winston');
+require('dotenv').config();
 
 const logger = winston.createLogger({
     level: 'info',
@@ -19,8 +20,8 @@ const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const players = [];
 
-const wss = new WebSocketServer({ port: 3000 });
-logger.info('WebSocket server is running on ws://localhost:3000');
+const wss = new WebSocketServer({ port: process.env.SERVER_PORT });
+logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 wss.on('connection', (ws) => {
     logger.debug('Client connected');
 
@@ -45,7 +46,7 @@ wss.on('connection', (ws) => {
         // Actuar dependiendo del tipo de mensaje
         switch (message.type) {
             case "JOIN":
-                handleJoin();
+                handleJoin(message, ws);
                 break;
             default:
                 logger.info(`Unknown message TYPE recieved (type=${message.type})`);
@@ -145,7 +146,7 @@ function sendMessage(ws, type, payload) {
  * Lógica para controlar los mensajes JOIN
  * @returns 
  */
-function handleJoin() {
+function handleJoin(message, ws) {
     // Comprobar que caben nuevos jugadores
     if (players.length >= MAX_PLAYERS) {
         sendMessage(ws, "REFUSED", "Maximum number of players reached, you will not be added to game");
