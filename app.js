@@ -66,7 +66,7 @@ wss.on('connection', (ws) => {
         logger.info('Client disconnected');
         removePlayer(getPlayerFromSocket(ws));
         removeGhostPlayers();
-        broadcast("UPDATED PLAYERS", players.length.toString());
+        notifyPlayersUpdated();
     });
 
     ws.on('error', () => {
@@ -77,6 +77,7 @@ wss.on('connection', (ws) => {
             logger.debug(`Player with gameId=${player.gameId} & name=${player.name} removed from players due to connection error`);
         }
         removeGhostPlayers();
+        notifyPlayersUpdated();
     });
 });
 
@@ -102,7 +103,7 @@ function validateStructureOf(data) {
 /**
  * Envía un mensaje a todos los jugadores registrados
  * @param {string} type 
- * @param {string} payload 
+ * @param {unknown} payload 
  */
 function broadcast(type, payload) {
     for (const player of players) {
@@ -141,7 +142,7 @@ function getPlayerFromSocket(ws) {
  * Envía un mensaje a un socket con una estructura Type, Payload
  * @param {import('ws').WebSocket} ws 
  * @param {string} type 
- * @param {string} payload 
+ * @param {unknown} payload 
  */
 function sendMessage(ws, type, payload) {
     const message = JSON.stringify({
@@ -156,6 +157,8 @@ function sendMessage(ws, type, payload) {
  * @returns 
  */
 function handleJoin(message, ws) {
+    // TODO: Comprobar que el player no está ya registrado
+
     // Comprobar que caben nuevos jugadores
     if (players.length >= MAX_PLAYERS) {
         sendMessage(ws, "REFUSED JOIN", "Maximum number of players reached");
@@ -186,12 +189,9 @@ function handleJoin(message, ws) {
     logger.info(`New registered player: ${playerName}`);
 
     // Notificar a jugadores estado actual de la sala
-    sendMessage(ws, "JOIN_OK", "You have been succesfully registered");
-    broadcast("UPDATED PLAYERS", players.length.toString());
+    sendMessage(ws, "ACCEPTED JOIN", null);
+    notifyPlayersUpdated();
     logger.debug(`All players have been notified with current room. Current Nº of Players: ${players.length}`);
-    if (players.length >= MIN_PLAYERS) {
-        broadcast("MIN PLAYERS ACHIEVED", "There are enough players to start the game");
-    }
 }
 
 /**
@@ -214,4 +214,13 @@ function removeGhostPlayers() {
  */
 function getPlayersSnapshot() {
     return [...players];
+}
+
+/**
+ * Notifica a todos los jugadores registrados sobre el estado actualizado de la sala
+ */
+function notifyPlayersUpdated() {
+    const playersSnapshot = getPlayersSnapshot();
+    const playersJson = playersSnapshot.map(player => player.toJSON());
+    broadcast("PLAYERS", playersJson);
 }

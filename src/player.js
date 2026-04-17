@@ -4,10 +4,18 @@ class Player {
      * @param {string} name - Nombre del jugador.
      * @param {import('ws').WebSocket} ws - La conexión WebSocket activa.
      */
+
+
     constructor(id, name, ws) {
         this.id = id;
         this.name = name;
         this.ws = ws;
+    }
+
+    toJSON() {
+        return {
+            name: this.name
+        };
     }
 }
 
