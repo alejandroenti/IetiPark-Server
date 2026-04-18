@@ -38,10 +38,9 @@ wss.on('connection', (ws) => {
     ws.on('message', (data) => {
         // Parsear el mensaje recibido a JSON
         let message;
-        logger.debug(`Received message: ${data.toString()}`);
         try {
             message = JSON.parse(data.toString());
-            logger.debug(`Correctly parsed the following message: ${message.toString()}`);
+            logger.debug(`Correctly parsed the following message: ${JSON.stringify(message)}`);
         } catch (error) {
             logger.error(`Error parsing message: ${error}`);
             sendMessage(ws, "INVALID MESSAGE", "Message must be a valid JSON string");
@@ -199,6 +198,11 @@ function handleUnknownType(messageType, ws) {
     logger.debug(`Message with unknown type has been sent a response and will be ignored from now on`);
 }
 
+/**
+ * Controla el estado del juego dependiendo del número de jugadores registrados.
+ * - Si el juego está esperando y hay suficientes jugadores, inicia el juego.
+ * - Si el juego está en curso y no hay suficientes jugadores, pausa el juego.
+ */
 function handleGameState() {
     if (game.isWaiting()) {
         if (playerRegistry.isEnoughPlayersToPlay()) {
