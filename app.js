@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 // Clases
 const Player = require('./src/player');
 const PlayerRegistry = require('./src/playerRegistry');
+const Game = require('./src/game');
 
 // .env correspondiente
 const envMode = process.env.NODE_ENV || 'dev';
@@ -57,11 +58,10 @@ wss.on('connection', (ws) => {
         // Actuar dependiendo del tipo de mensaje
         switch (message.type) {
             case "JOIN":
-                handleJoin(message, ws);
+                handleJoin(message.payload, ws);
                 break;
             default:
-                logger.info(`Unknown message TYPE recieved (type=${message.type})`);
-                sendMessage(ws, "UNKNOWN TYPE", "Server does not know how to handle this type of message");
+                handleUnknownType(message.type, ws);
                 break;
         }
     });
@@ -128,9 +128,10 @@ function sendMessage(ws, type, payload) {
 
 /**
  * Lógica para controlar los mensajes JOIN
- * @returns 
+ * @param {string} payload
+ * @param {import('ws').WebSocket} ws
  */
-function handleJoin(message, ws) {
+function handleJoin(payload, ws) {
     // Comprobar que el player no está ya registrado
     if (playerRegistry.wsIsRegistered(ws)) {
         sendMessage(ws, "REFUSED JOIN", "You are already registered");
@@ -146,7 +147,7 @@ function handleJoin(message, ws) {
         return;
     }
     // Comprobar que el nombre del jugador no está repetido
-    const playerName = message.payload;
+    const playerName = payload;
     if (playerRegistry.nameIsAlreadyTaken(playerName)) {
         sendMessage(ws, "REFUSED JOIN", "Player name already taken");
         ws.close();
@@ -170,6 +171,8 @@ function handleJoin(message, ws) {
     sendMessage(ws, "ACCEPTED JOIN", null);
     notifyPlayersUpdated();
     logger.debug(`All players have been notified with current room. Current Nº of Players: ${playerRegistry.getSize()}`);
+
+
 }
 
 /**
@@ -180,3 +183,13 @@ function notifyPlayersUpdated() {
     const playersJson = playersSnapshot.map(player => player.toJSON());
     broadcast("PLAYERS", playersJson);
 }
+
+/**
+ * Lógica para controlar los mensajes de tipo desconocido
+ * @param {string} messageType 
+ * @param {import('ws').WebSocket} ws 
+ */
+function handleUnknownType(messageType, ws) {
+    logger.info(`Unknown message TYPE recieved (type=${messageType})`);
+    sendMessage(ws, "UNKNOWN TYPE", "Server does not know how to handle this type of message");
+};
