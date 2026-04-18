@@ -1,9 +1,12 @@
+// Modulos
 const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
-const Player = require('./src/player');
 const winston = require('winston');
 const path = require('path');
 const dotenv = require('dotenv');
+// Clases
+const Player = require('./src/player');
+const PlayerRegistry = require('./src/playerRegistry');
 
 // .env correspondiente
 const envMode = process.env.NODE_ENV || 'dev';
@@ -11,7 +14,7 @@ dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
 
 // Logger
 const logger = winston.createLogger({
-    level: 'info',
+    level: 'debug',
     format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
@@ -23,9 +26,7 @@ const logger = winston.createLogger({
 });
 
 // Server
-const MIN_PLAYERS = 2;
-const MAX_PLAYERS = 8;
-const players = [];
+const playerRegistry = new PlayerRegistry();
 
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
@@ -35,11 +36,13 @@ wss.on('connection', (ws) => {
     ws.on('message', (data) => {
         // Parsear el mensaje recibido a JSON
         let message;
+        logger.debug(`Received message: ${data.toString()}`);
         try {
             message = JSON.parse(data.toString());
             logger.debug(`Correctly parsed the following message: ${message.toString()}`);
         } catch (error) {
             logger.error(`Error parsing message: ${error}`);
+            sendMessage(ws, "INVALID MESSAGE", "Message must be a valid JSON string");
             return;
         }
 
@@ -47,6 +50,7 @@ wss.on('connection', (ws) => {
         const isValidStructured = validateStructureOf(message);
         if (!isValidStructured) {
             logger.info('Received message does not have the expected structure');
+            sendMessage(ws, "INVALID MESSAGE", "Message must have a 'type' field and a 'payload' field");
             return;
         }
 
@@ -64,19 +68,16 @@ wss.on('connection', (ws) => {
 
     ws.on('close', () => {
         logger.info('Client disconnected');
-        removePlayer(getPlayerFromSocket(ws));
-        removeGhostPlayers();
+        playerRegistry.removePlayer(ws);
+        playerRegistry.removeGhostPlayers(Array.from(wss.clients));
         notifyPlayersUpdated();
     });
 
     ws.on('error', () => {
         logger.error('Error in connection with a WebSocket');
-        const player = getPlayerFromSocket(ws);
-        if (player !== null) {
-            removePlayer(player);
-            logger.debug(`Player with gameId=${player.gameId} & name=${player.name} removed from players due to connection error`);
-        }
-        removeGhostPlayers();
+        logger.debug(`Removing player with name=${playerRegistry.getPlayerName(ws)} removed from players due to connection error`);
+        playerRegistry.removePlayer(ws);
+        playerRegistry.removeGhostPlayers(Array.from(wss.clients));
         notifyPlayersUpdated();
     });
 });
@@ -106,35 +107,8 @@ function validateStructureOf(data) {
  * @param {unknown} payload 
  */
 function broadcast(type, payload) {
-    for (const player of players) {
-        sendMessage(player.ws, type, payload)
-    }
-}
-
-/**
- * Elimina a un jugador de la lista de jugadores registrados
- * @param {Player} playerToRemove 
- * @returns 
- */
-function removePlayer(playerToRemove) {
-    for (let i=0; i<players.length; i++) {
-        if (players[i].id === playerToRemove.id) {
-            players.splice(i, 1);
-            return;
-        }
-    }
-};
-
-/**
- * Obtiene un objeto Player de la lista de jugadores registrados a partir de su WebSocket
- * @param {import('ws').WebSocket} ws 
- * @returns 
- */
-function getPlayerFromSocket(ws) {
-    for (const player of players) {
-        if (ws === player.ws) {
-            return player;
-        }
+    for (const ws of playerRegistry.getWsSnapshot()) {
+        sendMessage(ws, type, payload)
     }
 }
 
@@ -158,14 +132,14 @@ function sendMessage(ws, type, payload) {
  */
 function handleJoin(message, ws) {
     // Comprobar que el player no está ya registrado
-    if (getPlayerFromSocket(ws) !== undefined) {
+    if (playerRegistry.wsIsRegistered(ws)) {
         sendMessage(ws, "REFUSED JOIN", "You are already registered");
         logger.info('A player tried to join but was already registered');
         return;
     }
 
     // Comprobar que caben nuevos jugadores
-    if (players.length >= MAX_PLAYERS) {
+    if (playerRegistry.isFull()) {
         sendMessage(ws, "REFUSED JOIN", "Maximum number of players reached");
         ws.close();
         logger.info('A player tried to join but the room was full');
@@ -173,7 +147,7 @@ function handleJoin(message, ws) {
     }
     // Comprobar que el nombre del jugador no está repetido
     const playerName = message.payload;
-    if (players.some(player => player.name === playerName)) {
+    if (playerRegistry.nameIsAlreadyTaken(playerName)) {
         sendMessage(ws, "REFUSED JOIN", "Player name already taken");
         ws.close();
         logger.info(`A player tried to join with a taken name: ${playerName}`);
@@ -184,48 +158,25 @@ function handleJoin(message, ws) {
     const playerId = crypto.randomUUID()
     const newPlayer = new Player(
         playerId,
-        playerName,
-        ws
+        playerName
     );
     logger.debug(`New Player object generated (playerId=${playerId}, playerName=${playerName})`);
 
     // Añadir a la lista de jugadores
-    players.push(newPlayer);
+    playerRegistry.addPlayer(ws, newPlayer);
     logger.info(`New registered player: ${playerName}`);
 
     // Notificar a jugadores estado actual de la sala
     sendMessage(ws, "ACCEPTED JOIN", null);
     notifyPlayersUpdated();
-    logger.debug(`All players have been notified with current room. Current Nº of Players: ${players.length}`);
-}
-
-/**
- * Elimina de 'players' a todos los players cuyo Socket no está registrado por el server ("juegadores fantasma")
- */
-function removeGhostPlayers() {
-    const playersSnapshot = getPlayersSnapshot();
-    const activeSockets = wss.clients;
-    for (const player of playersSnapshot) {
-        if (!activeSockets.has(player.ws)) {
-            logger.info(`Cleaning up ghost player: ${player.name}`);
-            removePlayer(player);
-        }
-    }
-}
-
-/**
- * Devuelve una snapshot del estado actual de players
- * @returns {Player[]} Array con una copia del contenido de 'players'
- */
-function getPlayersSnapshot() {
-    return [...players];
+    logger.debug(`All players have been notified with current room. Current Nº of Players: ${playerRegistry.getSize()}`);
 }
 
 /**
  * Notifica a todos los jugadores registrados sobre el estado actualizado de la sala
  */
 function notifyPlayersUpdated() {
-    const playersSnapshot = getPlayersSnapshot();
+    const playersSnapshot = playerRegistry.getPlayersSnapshot();
     const playersJson = playersSnapshot.map(player => player.toJSON());
     broadcast("PLAYERS", playersJson);
 }
