@@ -28,6 +28,7 @@ const logger = winston.createLogger({
 
 // Server
 const playerRegistry = new PlayerRegistry();
+const game = new Game();
 
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
@@ -71,6 +72,7 @@ wss.on('connection', (ws) => {
         playerRegistry.removePlayer(ws);
         playerRegistry.removeGhostPlayers(Array.from(wss.clients));
         notifyPlayersUpdated();
+        handleGameState();
     });
 
     ws.on('error', () => {
@@ -79,6 +81,7 @@ wss.on('connection', (ws) => {
         playerRegistry.removePlayer(ws);
         playerRegistry.removeGhostPlayers(Array.from(wss.clients));
         notifyPlayersUpdated();
+        handleGameState();
     });
 });
 
@@ -170,9 +173,9 @@ function handleJoin(payload, ws) {
     // Notificar a jugadores estado actual de la sala
     sendMessage(ws, "ACCEPTED JOIN", null);
     notifyPlayersUpdated();
-    logger.debug(`All players have been notified with current room. Current Nº of Players: ${playerRegistry.getSize()}`);
 
-
+    // Si se ha alcanzado el número mínimo de jugadores para iniciar la partida, iniciar la partida
+    handleGameState();
 }
 
 /**
@@ -182,6 +185,7 @@ function notifyPlayersUpdated() {
     const playersSnapshot = playerRegistry.getPlayersSnapshot();
     const playersJson = playersSnapshot.map(player => player.toJSON());
     broadcast("PLAYERS", playersJson);
+    logger.debug(`All players have been notified with current room. Current Nº of Players: ${playerRegistry.getSize()}`);
 }
 
 /**
@@ -192,4 +196,21 @@ function notifyPlayersUpdated() {
 function handleUnknownType(messageType, ws) {
     logger.info(`Unknown message TYPE recieved (type=${messageType})`);
     sendMessage(ws, "UNKNOWN TYPE", "Server does not know how to handle this type of message");
-};
+    logger.debug(`Message with unknown type has been sent a response and will be ignored from now on`);
+}
+
+function handleGameState() {
+    if (game.isWaiting()) {
+        if (playerRegistry.isEnoughPlayersToPlay()) {
+            game.start();
+            broadcast("START GAME", null);
+            logger.info('Game has been started');
+        }
+    } else if (game.isPlaying()) {
+        if (!playerRegistry.isEnoughPlayersToPlay()) {
+            game.finish();
+            broadcast("WAIT GAME", "Not enough players to continue the game");
+            logger.info('Game has been paused due to lack of players');
+        }
+    }
+}

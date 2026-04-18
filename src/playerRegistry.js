@@ -38,7 +38,7 @@ class PlayerRegistry {
         return false;
     }
 
-    isEnoughPlayers() {
+    isEnoughPlayersToPlay() {
         return this.players.size >= PlayerRegistry.MIN_PLAYERS;
     }
 
