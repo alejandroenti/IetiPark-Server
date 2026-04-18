@@ -1,0 +1,21 @@
+meta {
+  name: JOIN Client01
+  type: ws
+  seq: 1
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  content: '''
+    {
+      {{TYPE}}: "JOIN",
+      {{PAYLOAD}}: "cliente_1"
+    }
+  '''
+}
