@@ -28,8 +28,11 @@ const logger = winston.createLogger({
 
 // Server
 const playerRegistry = new PlayerRegistry();
-const game = new Game();
-
+const game = new Game(playerRegistry);
+game.start();
+setInterval(() => {
+    game.update();
+}, 1000 / 60); // 60 FPS
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 wss.on('connection', (ws) => {
@@ -204,6 +207,7 @@ function handleMove(payload, ws) {
     if (isValidMove) {
         logger.debug("Received a valid move: " + payload);
         sendMessage(ws, "VALID MOVE", null);
+        playerRegistry.setMovement(ws, payload);
     } else {
         logger.debug(`Received an invalid move: ${payload}`);
         sendMessage(ws, "INVALID MOVE", "Move must be 'LEFT', 'RIGHT' or 'NONE'");

@@ -13,15 +13,14 @@ ws {
 body:ws {
   name: message 1
   content: '''
-    // Hay que cortas el JSON que NO quieras mandar en cada llamada,
-    // no puedes mandar varios de golpe...
     {
       {{TYPE}}: "JOIN",
       {{PAYLOAD}}: "cliente_ejemplo_MOVE"
     }
+    
     {
       "type": "MOVE",
-      "payload": "LEFT"
+      "payload": "RIGHT"
     }
   '''
 }

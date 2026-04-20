@@ -6,7 +6,7 @@ class PlayerRegistry {
     static MAX_PLAYERS = 8;
 
     constructor() {
-        this.players = new Map();
+        this.players = new Map(); // Map de WebSocket a Player
     }
 
     addPlayer(ws, player) {
@@ -73,6 +73,18 @@ class PlayerRegistry {
     getPlayerName(ws) {
         const player = this.getPlayer(ws);
         return player ? player.name : null;
+    }
+
+    setMovement(ws, direction) {
+        if (!this.wsIsRegistered(ws)) {
+            return;
+        }
+        const player = this.getPlayer(ws);
+        // Si el jugador ya se está moviendo en esa dirección, no hago nada
+        if (player.isMovingInThis(direction)) {
+            return;
+        }
+        player.setThisMovement(direction);
     }
 }
 

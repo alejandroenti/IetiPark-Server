@@ -1,6 +1,14 @@
+const GameEngine = require("./gameEngine");
+
 class Game {
-    constructor() {
+    fps = 60;
+    frameDuration = 1000 / this.fps;
+
+    constructor(playerRegistry) {
+        this.playerRegistry = playerRegistry;
+        this.gameEngine = new GameEngine(playerRegistry);
         this.state = 'wait'; // wait, play, finish
+        this.nextUpdateTime = Date.now();
     }
 
     wait() {
@@ -31,6 +39,12 @@ class Game {
 
     isFinished() {
         return this.state === 'finish';
+    }
+
+    update() {
+        if (this.isPlaying()) {
+            this.gameEngine.update();
+        }
     }
 }
 
