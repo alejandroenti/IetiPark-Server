@@ -66,6 +66,13 @@ class PlayerRegistry {
         return Array.from(this.players.values());
     }
 
+    /**
+     * Utilizar con cuidado, no es una copia
+     */
+    getRealPlayers() {
+        return this.players.values();
+    }
+
     getSize() {
         return this.players.size;
     }
@@ -85,6 +92,13 @@ class PlayerRegistry {
             return;
         }
         player.setThisMovement(direction);
+    }
+
+    setJump(ws) {
+        const player = this.getPlayer(ws);
+        if (player) {
+            player.getGameState().isJumping = true;
+        }
     }
 }
 

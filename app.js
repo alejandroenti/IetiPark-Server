@@ -32,6 +32,9 @@ const game = new Game(playerRegistry);
 game.start();
 setInterval(() => {
     game.update();
+    for (const player of playerRegistry.getPlayersSnapshot()) {
+        console.log(player.toString());
+    }
 }, 1000 / 60); // 60 FPS
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
@@ -232,6 +235,7 @@ function handleJump(payload, ws) {
     // Validar que el mensaje tenga un payload válido
     ws.send("JUMP RECEIVED");
     logger.debug("Received a valid jump");
+    playerRegistry.setJump(ws);
 }
 
 /**

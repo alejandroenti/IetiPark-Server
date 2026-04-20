@@ -51,6 +51,10 @@ class Player {
             this.playerGameState.isMovingRight = false;
         }
     }
+
+    toString() {
+        return `Player ${this.name} (id=${this.id}): ${this.playerGameState.toString()}`;
+    }
 }
 
 module.exports = Player;
