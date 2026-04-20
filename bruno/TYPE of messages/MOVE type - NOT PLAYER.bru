@@ -1,0 +1,22 @@
+meta {
+  name: MOVE type - NOT PLAYER
+  type: ws
+  seq: 2
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {
+      "type": "MOVE",
+      "payload": "LEFT"
+    }
+  '''
+}

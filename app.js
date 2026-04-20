@@ -61,6 +61,9 @@ wss.on('connection', (ws) => {
             case "JOIN":
                 handleJoin(message.payload, ws);
                 break;
+            case "MOVE":
+                handleMove(message.payload, ws);
+                break;
             default:
                 handleUnknownType(message.type, ws);
                 break;
@@ -176,6 +179,32 @@ function handleJoin(payload, ws) {
 
     // Si se ha alcanzado el número mínimo de jugadores para iniciar la partida, iniciar la partida
     handleGameState();
+}
+
+/**
+ * Lógica para controlar los mensajes MOVE
+ * @param {string} payload - "LEFT", "RIGHT" o "NONE"
+ * @param {import('ws').WebSocket} ws
+ */
+function handleMove(payload, ws) {
+    logger.debug(`Received a MOVE message with payload: ${JSON.stringify(payload)}`);
+    // Si el socket no es de un jugador, rechazar el mensaje
+    if (!playerRegistry.wsIsRegistered(ws)) {
+        sendMessage(ws, "REFUSED MOVE", "You must join the game before sending moves");
+        logger.debug('A client tried to send a move but was not registered as player');
+        return;
+    }
+
+    // Validar que el mensaje tenga un payload válido
+    ws.send("MOVE RECEIVED");
+    const isValidMove = ["LEFT", "RIGHT", "NONE"].includes(payload);
+    if (isValidMove) {
+        logger.debug("Received a valid move: " + payload);
+        sendMessage(ws, "VALID MOVE", null);
+    } else {
+        logger.debug(`Received an invalid move: ${payload}`);
+        sendMessage(ws, "INVALID MOVE", "Move must be 'LEFT', 'RIGHT' or 'NONE'");
+    }
 }
 
 /**
