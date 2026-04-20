@@ -34,6 +34,7 @@ const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 wss.on('connection', (ws) => {
     logger.debug('Client connected');
+    notifyPlayersUpdated();
 
     ws.on('message', (data) => {
         // Parsear el mensaje recibido a JSON
@@ -104,12 +105,12 @@ function validateStructureOf(data) {
 }
 
 /**
- * Envía un mensaje a todos los jugadores registrados
+ * Envía un mensaje a todos los sockets conectados
  * @param {string} type 
  * @param {unknown} payload 
  */
 function broadcast(type, payload) {
-    for (const ws of playerRegistry.getWsSnapshot()) {
+    for (const ws of wss.clients) {
         sendMessage(ws, type, payload)
     }
 }
@@ -169,7 +170,7 @@ function handleJoin(payload, ws) {
     playerRegistry.addPlayer(ws, newPlayer);
     logger.info(`New registered player: ${playerName}`);
 
-    // Notificar a jugadores estado actual de la sala
+    // Notificar a todos los sockets conectados sobre el estado actual de la sala
     sendMessage(ws, "ACCEPTED JOIN", null);
     notifyPlayersUpdated();
 
@@ -178,7 +179,7 @@ function handleJoin(payload, ws) {
 }
 
 /**
- * Notifica a todos los jugadores registrados sobre el estado actualizado de la sala
+ * Notifica a todos los sockets conectados sobre el estado actualizado de la sala
  */
 function notifyPlayersUpdated() {
     const playersSnapshot = playerRegistry.getPlayersSnapshot();
