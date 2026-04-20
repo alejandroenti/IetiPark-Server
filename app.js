@@ -64,6 +64,9 @@ wss.on('connection', (ws) => {
             case "MOVE":
                 handleMove(message.payload, ws);
                 break;
+            case "JUMP":
+                handleJump(message.payload, ws);
+                break;
             default:
                 handleUnknownType(message.type, ws);
                 break;
@@ -205,6 +208,26 @@ function handleMove(payload, ws) {
         logger.debug(`Received an invalid move: ${payload}`);
         sendMessage(ws, "INVALID MOVE", "Move must be 'LEFT', 'RIGHT' or 'NONE'");
     }
+}
+
+/**
+ * Lógica para controlar los mensajes JUMP
+ * @param {null} payload 
+ * @param {import('ws').WebSocket} ws 
+ * @returns 
+ */
+function handleJump(payload, ws) {
+    logger.debug(`Received a JUMP message with payload: ${JSON.stringify(payload)}`);
+    // Si el socket no es de un jugador, rechazar el mensaje
+    if (!playerRegistry.wsIsRegistered(ws)) {
+        sendMessage(ws, "REFUSED JUMP", "You must join the game before sending jumps");
+        logger.debug('A client tried to send a jump but was not registered as player');
+        return;
+    }
+
+    // Validar que el mensaje tenga un payload válido
+    ws.send("JUMP RECEIVED");
+    logger.debug("Received a valid jump");
 }
 
 /**

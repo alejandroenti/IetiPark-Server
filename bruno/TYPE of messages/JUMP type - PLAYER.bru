@@ -1,0 +1,28 @@
+meta {
+  name: JUMP type - PLAYER
+  type: ws
+  seq: 5
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    // Hay que cortas el JSON que NO quieras mandar en cada llamada,
+    // no puedes mandar varios de golpe...
+    {
+      {{TYPE}}: "JOIN",
+      {{PAYLOAD}}: "cliente_ejemplo_MOVE"
+    }
+    {
+      "type": "JUMP",
+      "payload": null
+    }
+  '''
+}

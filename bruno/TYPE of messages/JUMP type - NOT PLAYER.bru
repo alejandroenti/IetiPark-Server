@@ -1,0 +1,22 @@
+meta {
+  name: JUMP type - NOT PLAYER
+  type: ws
+  seq: 4
+}
+
+ws {
+  url: {{URI}}
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {
+      "type": "JUMP",
+      "payload": null
+    }
+  '''
+}
