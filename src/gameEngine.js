@@ -60,6 +60,7 @@ class GameEngine {
     handleVerticalMovementFor(player) {
         const playerGameState = player.getGameState();
         const currentY = playerGameState.y;
+        // Comprobar qué hacer con 'Y' y verticalSpeed en casos específicos
         if ((playerGameState.y === 0 || playerGameState.canJump) && playerGameState.isJumping) { // Si puede saltar...
             playerGameState.verticalSpeed = this.jumpSpeed;
             playerGameState.canJump = false;
@@ -70,6 +71,9 @@ class GameEngine {
             playerGameState.verticalSpeed = 0;
             playerGameState.canJump = true;
         }
+        playerGameState.isJumping = false; // El salto se activa solo en el frame que se recibe la orden de salto
+
+        // Calcular qué hacer con el nuevo 'Y' dependiendo de si choca o atraviesa el suelo
         const newY = currentY + playerGameState.verticalSpeed;
         if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), // Si no choca con ninguna hitbox y está por encima del suelo...
             new Hitbox(
@@ -88,7 +92,7 @@ class GameEngine {
             playerGameState.verticalSpeed = 0;
             playerGameState.canJump = true;
         }
-        playerGameState.isJumping = false; // El salto se activa solo en el frame que se recibe la orden de salto
+        
     }
 
     hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
