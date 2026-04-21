@@ -7,9 +7,9 @@ const PlayerRegistry = require("./playerRegistry");
  * 
  */
 class GameEngine {
-    speed = 1;
-    acceleration = 1; // Aceleración de gravedad
-    jumpSpeed = 5; // Velocidad inicial del salto
+    speed = 0.01;
+    acceleration = 0.01; // Aceleración de gravedad
+    jumpSpeed = 0.5; // Velocidad inicial del salto
     /**
      * 
      * @param {PlayerRegistry} playerRegistry 
