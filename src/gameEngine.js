@@ -59,15 +59,35 @@ class GameEngine {
 
     handleVerticalMovementFor(player) {
         const playerGameState = player.getGameState();
-        if (playerGameState.y === 0 && playerGameState.isJumping) {
+        const currentY = playerGameState.y;
+        if ((playerGameState.y === 0 || playerGameState.canJump) && playerGameState.isJumping) { // Si puede saltar...
             playerGameState.verticalSpeed = this.jumpSpeed;
-        } else if (playerGameState.y > 0) {
+            playerGameState.canJump = false;
+        } else if (playerGameState.y > 0) { // Si está en el aire...
             playerGameState.verticalSpeed -= this.acceleration;
-        } else if (playerGameState.y < 0) {
+        } else if (playerGameState.y < 0) { // Si atraviesa el suelo...
             playerGameState.y = 0;
             playerGameState.verticalSpeed = 0;
+            playerGameState.canJump = true;
         }
-        playerGameState.y += playerGameState.verticalSpeed;
+        const newY = currentY + playerGameState.verticalSpeed;
+        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), // Si no choca con ninguna hitbox y está por encima del suelo...
+            new Hitbox(
+                playerGameState.x,
+                newY,
+                playerGameState.width,
+                playerGameState.height
+            )) && newY >= 0) {
+            playerGameState.y = newY;
+        } else if (newY < 0) { // Si atraviesa el suelo...
+            playerGameState.y = 0;
+            playerGameState.verticalSpeed = 0;
+            playerGameState.canJump = true;
+        } else { // Si debajo tiene una hitbox...
+            // TODO Poner la Y justo sobre la hitbox con la que choca
+            playerGameState.verticalSpeed = 0;
+            playerGameState.canJump = true;
+        }
         playerGameState.isJumping = false; // El salto se activa solo en el frame que se recibe la orden de salto
     }
 

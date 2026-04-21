@@ -8,7 +8,7 @@ class Player {
     constructor(id, name) {
         this.id = id;
         this.name = name;
-        this.playerGameState = new PlayerGameState(0,0);
+        this.playerGameState = new PlayerGameState(20,100);
     }
 
     toJSON() {
