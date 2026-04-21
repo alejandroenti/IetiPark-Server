@@ -32,9 +32,6 @@ const game = new Game(playerRegistry);
 game.start();
 setInterval(() => {
     game.update();
-    for (const player of playerRegistry.getPlayersSnapshot()) {
-        console.log(player.toString());
-    }
 }, 1000 / 60); // 60 FPS
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
@@ -265,6 +262,7 @@ function handleUnknownType(messageType, ws) {
  * - Si el juego está en curso y no hay suficientes jugadores, pausa el juego.
  */
 function handleGameState() {
+    return; // Por ahora el juego no se pausa ni se reanuda, siempre está en modo "play"
     if (game.isWaiting()) {
         if (playerRegistry.isEnoughPlayersToPlay()) {
             game.start();

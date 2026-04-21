@@ -7,7 +7,7 @@ class Game {
     constructor(playerRegistry) {
         this.playerRegistry = playerRegistry;
         this.gameEngine = new GameEngine(playerRegistry);
-        this.state = 'wait'; // wait, play, finish
+        this.state = 'play'; // wait, play, finish
         this.nextUpdateTime = Date.now();
     }
 

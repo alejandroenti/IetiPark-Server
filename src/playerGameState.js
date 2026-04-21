@@ -1,5 +1,6 @@
 /**
  * Objeto que representa el estado de un jugador en el juego, como posición, estado de salto, si tiene llave, hitbox, etc.
+ * 
  */
 class PlayerGameState {
     constructor(x, y) {
@@ -14,7 +15,7 @@ class PlayerGameState {
     }
 
     toString() {
-        return `x=${this.x}, y=${this.y}, verticalSpeed=${this.verticalSpeed}`;
+        return `x=${this.x}, y=${this.y}, verticalSpeed=${this.verticalSpeed}, isMovingLeft=${this.isMovingLeft}, isMovingRight=${this.isMovingRight}, isJumping=${this.isJumping}, hasKey=${this.hasKey}`;
     }
 }
 
