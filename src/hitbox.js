@@ -12,6 +12,11 @@ class Hitbox {
                  this.y + this.height < otherHitbox.y ||
                  this.y > otherHitbox.y + otherHitbox.height);
     }
+
+    updateHitboxPosition(newX, newY) {
+        this.x = newX;
+        this.y = newY;
+    }
 }
 
 module.exports = Hitbox;

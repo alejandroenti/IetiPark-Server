@@ -40,19 +40,19 @@ class Player {
     }
 
     setThisMovement(direction) {
-        console.log(`[Player.setThisMovement] Setting movement for player ${this.name} in direction ${direction}`);
+        //console.log(`[Player.setThisMovement] Setting movement for player ${this.name} in direction ${direction}`);
         if (direction === 'LEFT') {
             this.playerGameState.isMovingLeft = true;
             this.playerGameState.isMovingRight = false;
-            console.log(`[Player.setThisMovement] Player ${this.name} is now moving left`);
+            //console.log(`[Player.setThisMovement] Player ${this.name} is now moving left`);
         } else if (direction === 'RIGHT') {
             this.playerGameState.isMovingLeft = false;
             this.playerGameState.isMovingRight = true;
-            console.log(`[Player.setThisMovement] Player ${this.name} is now moving right`);
+            //console.log(`[Player.setThisMovement] Player ${this.name} is now moving right`);
         } else if (direction === 'NONE') {
             this.playerGameState.isMovingLeft = false;
             this.playerGameState.isMovingRight = false;
-            console.log(`[Player.setThisMovement] Player ${this.name} is now not moving horizontally`);
+            //console.log(`[Player.setThisMovement] Player ${this.name} is now not moving horizontally`);
         }
     }
 
@@ -62,6 +62,10 @@ class Player {
 
     equals(otherPlayer) {
         return this.id === otherPlayer.id;
+    }
+
+    getId() {
+        return this.id;
     }
 }
 

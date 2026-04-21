@@ -34,7 +34,7 @@ setInterval(() => {
     game.update();
     const arrayOfPlayersGameStates = generateArrayOfGameStates();
     broadcast("GAME STATE", arrayOfPlayersGameStates);
-}, 1000 / 60); // 60 FPS
+}, 1000 / 30); // 30 FPS
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 wss.on('connection', (ws) => {
@@ -121,8 +121,12 @@ function validateStructureOf(data) {
  * @param {unknown} payload 
  */
 function broadcast(type, payload) {
+    const message = JSON.stringify({
+        type: type,
+        payload: payload
+    });
     for (const ws of wss.clients) {
-        sendMessage(ws, type, payload)
+        ws.send(message);
     }
 }
 

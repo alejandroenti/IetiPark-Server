@@ -84,16 +84,16 @@ class PlayerRegistry {
 
     setMovement(ws, direction) {
         if (!this.wsIsRegistered(ws)) {
-            console.log(`[PlayerRegistry.setMovement] WebSocket ${ws} is not registered in PlayerRegistry`);
+            //console.log(`[PlayerRegistry.setMovement] WebSocket ${ws} is not registered in PlayerRegistry`);
             return;
         }
         const player = this.getPlayer(ws);
         // Si el jugador ya se está moviendo en esa dirección, no hago nada
         if (player.isMovingInThis(direction)) {
-            console.log(`[PlayerRegistry.setMovement] Player ${player.name} is already moving in direction ${direction}`);
+            //console.log(`[PlayerRegistry.setMovement] Player ${player.name} is already moving in direction ${direction}`);
             return;
         }
-        console.log(`[PlayerRegistry.setMovement] Setting movement for player ${player.name} in direction ${direction}`);
+        //console.log(`[PlayerRegistry.setMovement] Setting movement for player ${player.name} in direction ${direction}`);
         player.setThisMovement(direction);
     }
 
