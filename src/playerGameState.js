@@ -1,3 +1,5 @@
+const Hitbox = require("./hitbox");
+
 /**
  * Objeto que representa el estado de un jugador en el juego, como posición, estado de salto, si tiene llave, hitbox, etc.
  * 
@@ -11,7 +13,9 @@ class PlayerGameState {
         this.isMovingRight = false;
         this.isJumping = false;
         this.hasKey = false;
-        this.hitbox = null; // TODO Definir hitbox a partir de assets
+        this.width = 96; // TODO Coger hitbox de assets
+        this.height = 96; // TODO Coger hitbox de mapa
+        this.hitbox = new Hitbox(this.x, this.y, this.width, this.height);
     }
 
     toString() {

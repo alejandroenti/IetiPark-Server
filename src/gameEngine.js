@@ -54,6 +54,12 @@ class GameEngine {
             console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
+
+    handleHorizontalMovementFor(playerGameState) {
+        const currentX = playerGameState.x;
+        const newX = currentX + (playerGameState.isMovingLeft ? -this.speed : 0) + (playerGameState.isMovingRight ? this.speed : 0);
+        // TODO Comprobar colisión con otras hitboxes
+    }
 }
 
 module.exports = GameEngine;
