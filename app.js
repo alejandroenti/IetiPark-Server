@@ -32,6 +32,8 @@ const game = new Game(playerRegistry);
 game.start();
 setInterval(() => {
     game.update();
+    const arrayOfPlayersGameStates = generateArrayOfGameStates();
+    broadcast("GAME STATE", arrayOfPlayersGameStates);
 }, 1000 / 60); // 60 FPS
 const wss = new WebSocketServer({ port: Number(process.env.SERVER_PORT) });
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
@@ -276,4 +278,16 @@ function handleGameState() {
             logger.info('Game has been paused due to lack of players');
         }
     }
+}
+
+function generateArrayOfGameStates() {
+    const playersSnapshot = playerRegistry.getPlayersSnapshot();
+    const arrayOfGameStates = playersSnapshot.map(player => 
+        ({
+            name: player.name,
+            x: player.getGameState().x,
+            y: player.getGameState().y
+        })
+    );
+    return arrayOfGameStates;
 }
