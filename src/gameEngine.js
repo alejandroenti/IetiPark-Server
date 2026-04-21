@@ -2,14 +2,19 @@ const Player = require("./player");
 const PlayerGameState = require("./playerGameState");
 const PlayerRegistry = require("./playerRegistry");
 
+const path = require('path');
+const dotenv = require('dotenv');
+const envMode = process.env.NODE_ENV || 'dev';
+dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
+
 /**
  *  Objeto encargado de manegar la lógica del juego encargada del movimiento, validar acciones, calcular, etc.
  * 
  */
 class GameEngine {
-    speed = 0.01;
-    acceleration = 0.01; // Aceleración de gravedad
-    jumpSpeed = 0.5; // Velocidad inicial del salto
+    speed = parseFloat(process.env.SPEED);
+    acceleration = parseFloat(process.env.GRAVITY_ACCELERATION);
+    jumpSpeed = parseFloat(process.env.JUMP_SPEED);
     /**
      * 
      * @param {PlayerRegistry} playerRegistry 
