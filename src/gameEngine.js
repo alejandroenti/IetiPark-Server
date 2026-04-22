@@ -15,6 +15,11 @@ class GameEngine {
     speed = parseFloat(process.env.SPEED);
     acceleration = parseFloat(process.env.GRAVITY_ACCELERATION);
     jumpSpeed = parseFloat(process.env.JUMP_SPEED);
+
+    // staticHitboxes = [
+    //     new Hitbox(736, 0, 96, 300), // Puerta
+    // ];
+
     /**
      * 
      * @param {PlayerRegistry} playerRegistry 
@@ -103,6 +108,10 @@ class GameEngine {
             if (hitbox.intersects(playerHitbox)) {
                 return false;
             }
+        }
+        // Comprobar colisión con hitboxes de objetos estáticos (suelo, plataformas, etc.)
+        if (hitbox.intersects(new Hitbox(736-96, 0, 96, 300))) { // Puerta
+            return false;
         }
         return true;
     }
