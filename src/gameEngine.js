@@ -110,7 +110,7 @@ class GameEngine {
             }
         }
         // Comprobar colisión con hitboxes de objetos estáticos (suelo, plataformas, etc.)
-        if (hitbox.intersects(new Hitbox(736-96, 0, 96, 300))) { // Puerta
+        if (hitbox.intersects(new Hitbox(704, 0, 96, 300))) { // Puerta
             return false;
         }
         return true;
