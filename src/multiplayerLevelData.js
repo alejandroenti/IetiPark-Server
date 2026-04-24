@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Carpeta base donde se espera encontrar todos los JSON del nivel.
-const LEVEL_ROOT = path.resolve(__dirname, 'assets/levels');
+const LEVEL_ROOT = path.resolve(__dirname, '../assets');
 
 function loadMultiplayerLevel() {
     // Carga el archivo principal y toma el primer nivel definido.
@@ -78,13 +78,6 @@ function loadMultiplayerLevel() {
         durationSeconds: Math.max(0.001, Number(binding.durationMs || 0) / 1000)
     }));
 
-    // Busca la capa de gemas y genera posiciones de spawn por celda.
-    const gemLayer = layers.find((layer) => normalize(layer.name) === 'gems zone');
-    const gemTileMapRoot = gemLayer && gemLayer.tileMapFile
-        ? loadJson(path.join(LEVEL_ROOT, gemLayer.tileMapFile))
-        : { tileMap: [] };
-    const gemCells = buildGemCells(gemLayer, gemTileMapRoot.tileMap || []);
-
     // Parte del viewport y luego lo expande para cubrir todo el contenido real.
     let worldWidth = Number(level.viewportX || 0) + Number(level.viewportWidth || 320);
     let worldHeight = Number(level.viewportY || 0) + Number(level.viewportHeight || 180);
@@ -119,7 +112,6 @@ function loadMultiplayerLevel() {
         sprites,
         paths,
         pathBindings,
-        gemCells,
         animationClips
     };
 }
@@ -127,30 +119,6 @@ function loadMultiplayerLevel() {
 function loadJson(filePath) {
     // Lectura síncrona simple de archivos JSON de configuración.
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-}
-
-function buildGemCells(gemLayer, tileMap) {
-    // Si no hay capa de gemas, no hay celdas.
-    if (!gemLayer) {
-        return [];
-    }
-
-    // Calcula rejilla y posiciona cada gema centrada en su tile.
-    const cols = tileMap.reduce(
-        (max, row) => Math.max(max, Array.isArray(row) ? row.length : 0),
-        0
-    );
-    const rows = tileMap.length;
-    const cells = [];
-    for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-            cells.push({
-                x: gemLayer.x + col * gemLayer.tileWidth + (gemLayer.tileWidth - 15) * 0.5,
-                y: gemLayer.y + row * gemLayer.tileHeight + (gemLayer.tileHeight - 15) * 0.5
-            });
-        }
-    }
-    return cells;
 }
 
 function normalize(value) {

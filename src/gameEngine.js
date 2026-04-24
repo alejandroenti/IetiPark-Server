@@ -1,6 +1,7 @@
 const Player = require("./player");
 const PlayerGameState = require("./playerGameState");
 const PlayerRegistry = require("./playerRegistry");
+const { loadMultiplayerLevel } = require('./multiplayerLevelData.js');
 
 const path = require('path');
 const dotenv = require('dotenv');
@@ -16,24 +17,22 @@ class GameEngine {
     acceleration = parseFloat(process.env.GRAVITY_ACCELERATION);
     jumpSpeed = parseFloat(process.env.JUMP_SPEED);
 
-    // staticHitboxes = [
-    //     new Hitbox(736, 0, 96, 300), // Puerta
-    // ];
-
     /**
      * 
      * @param {PlayerRegistry} playerRegistry 
      */
     constructor(playerRegistry) {
         this.playerRegistry = playerRegistry;
+        this.LEVEL = loadMultiplayerLevel();
+        console.log(`Level data: ${JSON.stringify(this.LEVEL, null, 4)}`);
     }
 
     update() {
         const players = this.playerRegistry.players.values();
-        this.calculateGameStateFor(players);
+        this.#calculateGameStateFor(players);
     }
 
-    calculateGameStateFor(players) {
+    #calculateGameStateFor(players) {
         for (const player of players) {
             ////console.log(`[GameEngine.calculateGameStateFor] player BEFORE update --> ${player.toString()}`);
             // Movimiento horizontal
@@ -46,7 +45,7 @@ class GameEngine {
         }
     }
 
-    handleHorizontalMovementFor(player) {
+    #handleHorizontalMovementFor(player) {
         const playerGameState = player.getGameState();
         const currentX = playerGameState.x;
         const newX = currentX + (playerGameState.isMovingLeft ? -this.speed : 0) + (playerGameState.isMovingRight ? this.speed : 0);
@@ -100,7 +99,7 @@ class GameEngine {
         
     }
 
-    hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
+    #hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
         const players = this.playerRegistry.players.values();
         for (const player of players) {
             if (player.getId() === playerId) continue;
