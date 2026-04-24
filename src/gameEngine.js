@@ -24,7 +24,10 @@ class GameEngine {
     constructor(playerRegistry) {
         this.playerRegistry = playerRegistry;
         this.LEVEL = loadMultiplayerLevel();
-        console.log(`Level data: ${JSON.stringify(this.LEVEL, null, 4)}`);
+        console.log(`Level data: ${JSON.stringify(this.LEVEL, (key, value) => {
+            if (value instanceof Map) return Object.fromEntries(value);
+            return value;
+        }, 2)}`);
     }
 
     update() {
