@@ -29,10 +29,10 @@ class GameEngine {
             return value;
         }, 2)}`);
         this.ground = this.LEVEL.zones.find(zone => zone.name === 'ground');
-        console.log(`Ground layer: ${JSON.stringify(this.ground)}`);
         this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
         this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');
         this.doorHitbox = new Hitbox(this.door.x, this.door.y, this.door.width, this.door.height, 0.5, 0.5);
+        this.invisibleWallsHitboxes = this.LEVEL.zones.filter(zone => zone.name.startsWith('invisible_wall')).map(wall => new Hitbox(wall.x, wall.y, wall.width, wall.height, 0, 0));
     }
 
     update() {
@@ -113,6 +113,12 @@ class GameEngine {
         // Suelo
         if (hitbox.intersects(this.groundHitbox)) {
             return false;
+        }
+        // Invisible Walls
+        for (const invisibleWallHitbox of this.invisibleWallsHitboxes) {
+            if (hitbox.intersects(invisibleWallHitbox)) {
+                return false;
+            }
         }
         return true;
     }
