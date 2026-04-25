@@ -35,6 +35,7 @@ class GameEngine {
             this.handleHorizontalMovementFor(player);
             this.handleVerticalMovementFor(player);
             player.getGameState().hitbox.updateHitboxPosition(player.getGameState().x, player.getGameState().y);
+            this.handleKeyCollectionFor(player);
             console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
@@ -114,6 +115,16 @@ class GameEngine {
             }
         }
         return false;
+    }
+
+    handleKeyCollectionFor(player) {
+        if (this.level.isKeyTaken()) return;
+        const playerHitbox = player.getGameState().hitbox;
+        if (playerHitbox.intersectsWith(this.level.getKeyHitbox())) {
+            console.log(`[GameEngine.handleKeyCollectionFor] Player ${player.getId()} has taken the key!`);
+            this.level.takeKey();
+            player.giveKey();
+        }
     }
 }
 

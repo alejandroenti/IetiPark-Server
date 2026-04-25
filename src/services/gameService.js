@@ -89,15 +89,36 @@ class GameService {
     }
 
     handleDisconnect(ws, activeSockets) {
+        this.handleKeyUnassignmentForDisconnectedPlayer(ws);
         this.playerRegistry.removePlayer(ws);
         this.playerRegistry.removeGhostPlayers(activeSockets);
         this.notifyPlayersUpdated();
         this.handleGameState();
     }
 
+    /**
+     * Si el jugador desconectado tenía la llave, se la quitamos para que otro jugador pueda tomarla.
+     * Si la puerta no está abierta, ponemos la llave disponible.
+     * @param {WebSocket} ws 
+     * @returns 
+     */
+    handleKeyUnassignmentForDisconnectedPlayer(ws) {
+        const player = this.playerRegistry.getPlayer(ws);
+        if (!player) return;
+        if (player.getGameState().hasKey) {
+            player.removeKey();
+            this.logger.info(`Player ${player.name} disconnected and dropped the key`);
+            if (this.game.currentLevel.isKeyTaken() && !this.game.currentLevel.isDoorOpen()) {
+                this.game.currentLevel.makeKeyAvailable();
+            }
+        }
+    }
+
     notifyPlayersUpdated() {
         const playersSnapshot = this.playerRegistry.getPlayersSnapshot();
+        const payload = new Map();
         const playersJson = playersSnapshot.map(player => player.toJSON());
+        
         this.broadcast('PLAYERS', playersJson);
         this.logger.debug(`All players have been notified with current room. Current Nº of Players: ${this.playerRegistry.getSize()}`);
     }

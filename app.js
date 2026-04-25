@@ -39,5 +39,13 @@ logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_
 
 setInterval(() => {
     game.update();
-    socketHandler.broadcast('GAME STATE', game.getPlayersGameStates());
+    socketHandler.broadcast('GAME STATE', getGameState());
 }, 1000 / 30);
+
+function getGameState() {
+    const payload = {
+        players: game.getPlayersGameStates(),
+        currentLevel: game.currentLevel.getCurrentLevelState()
+    };
+    return payload;
+}

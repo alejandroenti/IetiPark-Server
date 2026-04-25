@@ -85,6 +85,14 @@ class Player {
     getId() {
         return this.id;
     }
+
+    giveKey() {
+        this.playerGameState.hasKey = true;
+    }
+
+    removeKey() {
+        this.playerGameState.hasKey = false;
+    }
 }
 
 module.exports = Player;

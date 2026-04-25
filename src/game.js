@@ -10,7 +10,7 @@ class Game {
         this.playerRegistry = new PlayerRegistry();
         this.state = 'play'; // wait, play, finish
         this.FirstLevel = new Level('first_level');
-        // TODO this.SecondLevel = new Level(...));
+        // TODO this.SecondLevel = new Level('second_level');
         this.currentLevel = this.FirstLevel;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
     }
@@ -65,6 +65,7 @@ class Game {
     update() {
         if (this.isPlaying()) {
             this.gameEngine.update();
+            
         }
     }
 }

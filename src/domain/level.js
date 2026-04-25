@@ -21,6 +21,10 @@ class Level {
         this._isKeyTaken = false;
     }
 
+    getName() {
+        return this.level.levelName;
+    }
+
     getGroundHitboxes() {
         return this.groundHitboxes;
     }
@@ -45,12 +49,24 @@ class Level {
         this._isKeyTaken = true;
     }
 
+    makeKeyAvailable() {
+        this._isKeyTaken = false;
+    }
+
     isDoorOpen() {
         return this._isDoorOpen;
     }
 
     openDoor() {
         this._isDoorOpen = true;
+    }
+
+    getCurrentLevelState() {
+        return {
+            name: this.getName(),
+            isDoorOpen: this.isDoorOpen(),
+            isKeyTaken: this.isKeyTaken()
+        };
     }
 }
 
