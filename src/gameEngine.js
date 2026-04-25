@@ -24,10 +24,10 @@ class GameEngine {
     constructor(playerRegistry) {
         this.playerRegistry = playerRegistry;
         this.LEVEL = loadMultiplayerLevel();
-        console.log(`Level data: ${JSON.stringify(this.LEVEL, (key, value) => {
-            if (value instanceof Map) return Object.fromEntries(value);
-            return value;
-        }, 2)}`);
+        // console.log(`Level data: ${JSON.stringify(this.LEVEL, (key, value) => {
+        //     if (value instanceof Map) return Object.fromEntries(value);
+        //     return value;
+        // }, 2)}`);
         this.ground = this.LEVEL.zones.find(zone => zone.name === 'ground');
         this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
         this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');

@@ -290,7 +290,11 @@ function generateArrayOfGameStates() {
         ({
             name: player.name,
             x: player.getGameState().x,
-            y: player.getGameState().y
+            y: player.getGameState().y,
+            isMovingLeft: player.getGameState().isMovingLeft,
+            isMovingRight: player.getGameState().isMovingRight,
+            isJumping: player.getGameState().isJumping,
+            hasKey: player.getGameState().hasKey
         })
     );
     return arrayOfGameStates;
