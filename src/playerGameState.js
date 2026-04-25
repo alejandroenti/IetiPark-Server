@@ -14,9 +14,9 @@ class PlayerGameState {
         this.isJumping = false;
         this.canJump = false;
         this.hasKey = false;
-        this.width = 96; // TODO Coger hitbox de assets
-        this.height = 96; // TODO Coger hitbox de mapa
-        this.hitbox = new Hitbox(this.x, this.y, this.width, this.height);
+        this.width = 32;
+        this.height = 32;
+        this.hitbox = new Hitbox(this.x, this.y, this.width, this.height, 0.5, 0.5);
     }
 
     toString() {

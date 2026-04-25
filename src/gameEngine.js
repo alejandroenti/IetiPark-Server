@@ -28,14 +28,18 @@ class GameEngine {
             if (value instanceof Map) return Object.fromEntries(value);
             return value;
         }, 2)}`);
+        this.ground = this.LEVEL.layers.find(layer => layer.name === 'ground');
+        this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
+        this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');
+        this.doorHitbox = new Hitbox(this.door.x, this.door.y, this.door.width, this.door.height, 0.5, 0.5);
     }
 
     update() {
         const players = this.playerRegistry.players.values();
-        this.#calculateGameStateFor(players);
+        this.calculateGameStateFor(players);
     }
 
-    #calculateGameStateFor(players) {
+    calculateGameStateFor(players) {
         for (const player of players) {
             ////console.log(`[GameEngine.calculateGameStateFor] player BEFORE update --> ${player.toString()}`);
             // Movimiento horizontal
@@ -48,18 +52,13 @@ class GameEngine {
         }
     }
 
-    #handleHorizontalMovementFor(player) {
+    handleHorizontalMovementFor(player) {
         const playerGameState = player.getGameState();
         const currentX = playerGameState.x;
         const newX = currentX + (playerGameState.isMovingLeft ? -this.speed : 0) + (playerGameState.isMovingRight ? this.speed : 0);
         // Comprobar colisión de hitbox tras el movimiento horizontal
-        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(),
-            new Hitbox(
-                newX,
-                playerGameState.y,
-                playerGameState.width,
-                playerGameState.height
-            ))){
+        const hitboxWithNewX = new Hitbox(newX, playerGameState.y, playerGameState.width, playerGameState.height, 0.5, 0.5);
+        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewX)){
             playerGameState.x = newX;
         }
     }
@@ -102,7 +101,7 @@ class GameEngine {
         
     }
 
-    #hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
+    hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
         const players = this.playerRegistry.players.values();
         for (const player of players) {
             if (player.getId() === playerId) continue;

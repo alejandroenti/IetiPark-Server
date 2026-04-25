@@ -8,7 +8,7 @@ class Player {
     constructor(id, name) {
         this.id = id;
         this.name = name;
-        this.playerGameState = new PlayerGameState(20,100);
+        this.playerGameState = new PlayerGameState(20,0); // Que empiece en el cielo, del nivel del Games_Tool
     }
 
     toJSON() {
