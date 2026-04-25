@@ -28,7 +28,8 @@ class GameEngine {
             if (value instanceof Map) return Object.fromEntries(value);
             return value;
         }, 2)}`);
-        this.ground = this.LEVEL.layers.find(layer => layer.name === 'ground');
+        this.ground = this.LEVEL.zones.find(zone => zone.name === 'ground');
+        console.log(`Ground layer: ${JSON.stringify(this.ground)}`);
         this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
         this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');
         this.doorHitbox = new Hitbox(this.door.x, this.door.y, this.door.width, this.door.height, 0.5, 0.5);
@@ -57,7 +58,7 @@ class GameEngine {
         const currentX = playerGameState.x;
         const newX = currentX + (playerGameState.isMovingLeft ? -this.speed : 0) + (playerGameState.isMovingRight ? this.speed : 0);
         // Comprobar colisión de hitbox tras el movimiento horizontal
-        const hitboxWithNewX = new Hitbox(newX, playerGameState.y, playerGameState.width, playerGameState.height, 0.5, 0.5);
+        const hitboxWithNewX = new Hitbox(newX, playerGameState.y, playerGameState.width, playerGameState.height, playerGameState.hitbox.anchorX, playerGameState.hitbox.anchorY);
         if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewX)){
             playerGameState.x = newX;
         }
@@ -66,31 +67,25 @@ class GameEngine {
     handleVerticalMovementFor(player) {
         const playerGameState = player.getGameState();
         const currentY = playerGameState.y;
+        let isPlayerInAir = (currentY + playerGameState.height * playerGameState.hitbox.anchorY) < this.groundHitbox.y; // TODO Comprobar colisión con hitboxes de objetos estáticos (suelo, plataformas, etc.) en vez de solo con el suelo
         // Comprobar qué hacer con 'Y' y verticalSpeed en casos específicos
-        if ((playerGameState.y === 0 || playerGameState.canJump) && playerGameState.isJumping) { // Si puede saltar...
-            playerGameState.verticalSpeed = this.jumpSpeed;
+        if (playerGameState.canJump && playerGameState.isJumping) { // Si puede saltar...
+            playerGameState.verticalSpeed = -1 * this.jumpSpeed; // -1 porque en el gamestool del albert el eje 'Y' va para abajo (por algún motivo...)
             playerGameState.canJump = false;
-        } else if (playerGameState.y > 0) { // Si está en el aire...
-            playerGameState.verticalSpeed -= this.acceleration;
-        } else if (playerGameState.y < 0) { // Si atraviesa el suelo...
-            playerGameState.y = 0;
-            playerGameState.verticalSpeed = 0;
-            playerGameState.canJump = true;
+        } else if (isPlayerInAir) {
+            playerGameState.verticalSpeed += this.acceleration;
         }
         playerGameState.isJumping = false; // El salto se activa solo en el frame que se recibe la orden de salto
 
         // Calcular qué hacer con el nuevo 'Y' dependiendo de si choca o atraviesa el suelo
         const newY = currentY + playerGameState.verticalSpeed;
-        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), // Si no choca con ninguna hitbox y está por encima del suelo...
-            new Hitbox(
-                playerGameState.x,
-                newY,
-                playerGameState.width,
-                playerGameState.height
-            )) && newY >= 0) {
+        isPlayerInAir = (newY + playerGameState.height * playerGameState.hitbox.anchorY) < this.groundHitbox.y;
+        const hitboxWithNewY = new Hitbox(playerGameState.x, newY, playerGameState.width, playerGameState.height, playerGameState.hitbox.anchorX, playerGameState.hitbox.anchorY);
+        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewY) && isPlayerInAir) { // Si no choca con nada y está en el aire...
             playerGameState.y = newY;
-        } else if (newY < 0) { // Si atraviesa el suelo...
-            playerGameState.y = 0;
+            playerGameState.canJump = false;
+        } else if (!isPlayerInAir) { // Si atraviesa el suelo...
+            playerGameState.y = this.groundHitbox.y - playerGameState.height * playerGameState.hitbox.anchorY;
             playerGameState.verticalSpeed = 0;
             playerGameState.canJump = true;
         } else { // Si debajo tiene una hitbox...
@@ -103,6 +98,7 @@ class GameEngine {
 
     hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox) {
         const players = this.playerRegistry.players.values();
+        // Otros jugadores
         for (const player of players) {
             if (player.getId() === playerId) continue;
             const playerHitbox = player.getGameState().hitbox;
@@ -110,8 +106,12 @@ class GameEngine {
                 return false;
             }
         }
-        // Comprobar colisión con hitboxes de objetos estáticos (suelo, plataformas, etc.)
-        if (hitbox.intersects(new Hitbox(704, 0, 96, 300))) { // Puerta
+        // Puerta
+        if (hitbox.intersects(this.doorHitbox)) { // Puerta
+            return false;
+        }
+        // Suelo
+        if (hitbox.intersects(this.groundHitbox)) {
             return false;
         }
         return true;
