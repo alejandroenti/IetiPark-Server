@@ -1,5 +1,6 @@
 const GameEngine = require("./engine/gameEngine");
 const PlayerRegistry = require("./domain/playerRegistry");
+const Level = require("./domain/level");
 
 class Game {
     fps = 60;
@@ -7,9 +8,11 @@ class Game {
 
     constructor() {
         this.playerRegistry = new PlayerRegistry();
-        this.gameEngine = new GameEngine(this.playerRegistry);
         this.state = 'play'; // wait, play, finish
-        this.nextUpdateTime = Date.now();
+        this.FirstLevel = new Level('first_level');
+        // TODO this.SecondLevel = new Level(...));
+        this.currentLevel = this.FirstLevel;
+        this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
     }
 
     getPlayerRegistry() {

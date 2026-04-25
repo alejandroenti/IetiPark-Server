@@ -1,4 +1,5 @@
 const { loadMultiplayerLevel } = require('../multiplayerLevelData.js');
+const Level = require('../domain/level.js');
 
 const path = require('path');
 const dotenv = require('dotenv');
@@ -17,16 +18,12 @@ class GameEngine {
     /**
      * 
      * @param {import('../domain/playerRegistry')} playerRegistry 
+     * @param {import('../domain/level')} level
      */
-    constructor(playerRegistry) {
+    constructor(playerRegistry, level) {
         this.playerRegistry = playerRegistry;
-        this.LEVEL = loadMultiplayerLevel("first_level");
-        console.log(`[GameEngine.constructor] Loaded level: ${JSON.stringify(this.LEVEL, null, 2)}`);
-        this.ground = this.LEVEL.zones.find(zone => zone.name === 'ground');
-        this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
-        this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');
-        this.doorHitbox = new Hitbox(this.door.x, this.door.y, this.door.width, this.door.height, 0.5, 0.5);
-        this.invisibleWallsHitboxes = this.LEVEL.zones.filter(zone => zone.name.startsWith('invisible_wall')).map(wall => new Hitbox(wall.x, wall.y, wall.width, wall.height, 0, 0));
+        this.level = level;
+        console.log(`[GameEngine.constructor] Loaded level: ${JSON.stringify(this.level, null, 2)}`);
     }
 
     update() {
@@ -57,32 +54,31 @@ class GameEngine {
     handleVerticalMovementFor(player) {
         const playerGameState = player.getGameState();
         const currentY = playerGameState.y;
-        let isPlayerInAir = (currentY + playerGameState.height * playerGameState.hitbox.anchorY) < this.groundHitbox.y;
-        if (playerGameState.canJump && playerGameState.isJumping) {
+        let isPlayerInAir = !this.hitboxIntesectsWithGrounds(playerGameState.hitbox);
+        // Comprobar qué hacer con 'Y' y verticalSpeed en casos específicos
+        if (playerGameState.canJump && playerGameState.isJumping) { // Si puede saltar y salta...
             playerGameState.verticalSpeed = -1 * this.jumpSpeed;
             playerGameState.canJump = false;
         } else if (isPlayerInAir) {
             playerGameState.verticalSpeed += this.acceleration;
         }
-        playerGameState.isJumping = false;
-
+        // Calcular nuevos valores        
         const newY = currentY + playerGameState.verticalSpeed;
-        isPlayerInAir = (newY + playerGameState.height * playerGameState.hitbox.anchorY) < this.groundHitbox.y;
         const hitboxWithNewY = new Hitbox(playerGameState.x, newY, playerGameState.width, playerGameState.height, playerGameState.hitbox.anchorX, playerGameState.hitbox.anchorY);
-        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewY) && isPlayerInAir) {
+        isPlayerInAir = isPlayerInAir && !this.hitboxIntesectsWithGrounds(hitboxWithNewY);
+        // Decidir qué cambios aplicar al gamestate
+        if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewY) && isPlayerInAir) { // Si el jugador NO choca con otra entidad y está en el aire...
             playerGameState.y = newY;
             playerGameState.canJump = false;
-        } else if (!isPlayerInAir) {
-            playerGameState.y = this.groundHitbox.y - playerGameState.height * playerGameState.hitbox.anchorY;
-            playerGameState.verticalSpeed = 0;
-            playerGameState.canJump = true;
-        } else {
+        } else { // Si choca con algo...
             playerGameState.verticalSpeed = 0;
             playerGameState.canJump = true;
         }
+        playerGameState.isJumping = false;
     }
 
     hitboxDoesNotIntersectWithAnyOtherHitbox(playerId, hitbox, horizontalMovement = false) {
+        // Jugadores
         const players = this.playerRegistry.players.values();
         for (const player of players) {
             if (player.getId() === playerId) continue;
@@ -91,22 +87,35 @@ class GameEngine {
                 return false;
             }
         }
-        if (hitbox.intersectsWith(this.doorHitbox)) {
+        // Puerta
+        if (hitbox.intersectsWith(this.level.getDoorHitbox())) {
             console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has reached the door!`);
             return false;
         }
-        for (const invisibleWallHitbox of this.invisibleWallsHitboxes) {
+        // Paredes invisibles
+        for (const invisibleWallHitbox of this.level.getInvisibleWallsHitboxes()) {
             if (hitbox.intersectsWith(invisibleWallHitbox)) {
                 console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with an invisible wall!`);
                 return false;
             }
         }
-        if (horizontalMovement) return true;
-        if (hitbox.intersectsWith(this.groundHitbox)) {
+        if (horizontalMovement) return true; // Si es un movimiento horizontal, no miramos colisión con el suelo
+        // Suelo
+        const intersectsWithGrounds = this.hitboxIntesectsWithGrounds(hitbox);
+        if (intersectsWithGrounds) {
             console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
             return false;
         }
         return true;
+    }
+
+    hitboxIntesectsWithGrounds(hitbox) {
+        for (const groundHitbox of this.level.getGroundHitboxes()) {
+            if (hitbox.intersectsWith(groundHitbox)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
