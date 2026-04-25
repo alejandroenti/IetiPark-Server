@@ -1,4 +1,4 @@
-const Hitbox = require("./hitbox");
+const Hitbox = require("../engine/hitbox");
 
 /**
  * Objeto que representa el estado de un jugador en el juego, como posición, estado de salto, si tiene llave, hitbox, etc.

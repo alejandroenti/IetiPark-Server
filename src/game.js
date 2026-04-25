@@ -1,14 +1,32 @@
-const GameEngine = require("./gameEngine");
+const GameEngine = require("./engine/gameEngine");
+const PlayerRegistry = require("./domain/playerRegistry");
 
 class Game {
     fps = 60;
     frameDuration = 1000 / this.fps;
 
-    constructor(playerRegistry) {
-        this.playerRegistry = playerRegistry;
-        this.gameEngine = new GameEngine(playerRegistry);
+    constructor() {
+        this.playerRegistry = new PlayerRegistry();
+        this.gameEngine = new GameEngine(this.playerRegistry);
         this.state = 'play'; // wait, play, finish
         this.nextUpdateTime = Date.now();
+    }
+
+    getPlayerRegistry() {
+        return this.playerRegistry;
+    }
+
+    getPlayersGameStates() {
+        const playersSnapshot = this.playerRegistry.getPlayersSnapshot();
+        return playersSnapshot.map(player => ({
+            name: player.name,
+            x: player.getGameState().x,
+            y: player.getGameState().y,
+            isMovingLeft: player.getGameState().isMovingLeft,
+            isMovingRight: player.getGameState().isMovingRight,
+            isJumping: player.getGameState().isJumping,
+            hasKey: player.getGameState().hasKey
+        }));
     }
 
     wait() {

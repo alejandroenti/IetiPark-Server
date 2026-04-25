@@ -8,7 +8,9 @@ class Player {
     constructor(id, name) {
         this.id = id;
         this.name = name;
-        this.playerGameState = new PlayerGameState(20,0); // Que empiece en el cielo, del nivel del Games_Tool
+        this.playerGameState = new PlayerGameState(20, 0); // Que empiece en el cielo, del nivel del Games_Tool
+        this.pendingMovement = null;
+        this.pendingJump = false;
     }
 
     toJSON() {
@@ -39,20 +41,36 @@ class Player {
         return false;
     }
 
+    queueMovementInput(direction) {
+        this.pendingMovement = direction;
+    }
+
+    queueJumpInput() {
+        this.pendingJump = true;
+    }
+
+    applyPendingInput() {
+        if (this.pendingMovement !== null) {
+            this.setThisMovement(this.pendingMovement);
+            this.pendingMovement = null;
+        }
+
+        if (this.pendingJump) {
+            this.playerGameState.isJumping = true;
+            this.pendingJump = false;
+        }
+    }
+
     setThisMovement(direction) {
-        //console.log(`[Player.setThisMovement] Setting movement for player ${this.name} in direction ${direction}`);
         if (direction === 'LEFT') {
             this.playerGameState.isMovingLeft = true;
             this.playerGameState.isMovingRight = false;
-            //console.log(`[Player.setThisMovement] Player ${this.name} is now moving left`);
         } else if (direction === 'RIGHT') {
             this.playerGameState.isMovingLeft = false;
             this.playerGameState.isMovingRight = true;
-            //console.log(`[Player.setThisMovement] Player ${this.name} is now moving right`);
         } else if (direction === 'NONE') {
             this.playerGameState.isMovingLeft = false;
             this.playerGameState.isMovingRight = false;
-            //console.log(`[Player.setThisMovement] Player ${this.name} is now not moving horizontally`);
         }
     }
 
