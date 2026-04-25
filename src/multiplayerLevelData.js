@@ -6,10 +6,11 @@ const path = require('path');
 // Carpeta base donde se espera encontrar todos los JSON del nivel.
 const LEVEL_ROOT = path.resolve(__dirname, '../assets');
 
-function loadMultiplayerLevel() {
-    // Carga el archivo principal y toma el primer nivel definido.
+function loadMultiplayerLevel(levelName) {
+    // Carga el archivo principal.
     const root = loadJson(path.join(LEVEL_ROOT, 'game_data.json'));
-    const level = (root.levels || [])[0] || {};
+    // Carga el nivel específico solicitado o el primero disponible si no se encuentra.
+    const level = (root.levels || []).find(l => l.name === levelName) || (root.levels || [])[0] || {};
 
     // Carga fuentes de datos auxiliares del nivel (zonas, rutas y animaciones).
     const zonesRoot = loadJson(path.join(LEVEL_ROOT, level.zonesFile));

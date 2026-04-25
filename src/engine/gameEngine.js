@@ -20,7 +20,8 @@ class GameEngine {
      */
     constructor(playerRegistry) {
         this.playerRegistry = playerRegistry;
-        this.LEVEL = loadMultiplayerLevel();
+        this.LEVEL = loadMultiplayerLevel("first_level");
+        console.log(`[GameEngine.constructor] Loaded level: ${JSON.stringify(this.LEVEL, null, 2)}`);
         this.ground = this.LEVEL.zones.find(zone => zone.name === 'ground');
         this.groundHitbox = new Hitbox(this.ground.x, this.ground.y, this.ground.width, this.ground.height, 0, 0);
         this.door = this.LEVEL.sprites.find(sprite => sprite.name === 'door');
