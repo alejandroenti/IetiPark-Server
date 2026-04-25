@@ -1,5 +1,3 @@
-const { loadMultiplayerLevel } = require('../multiplayerLevelData.js');
-const Level = require('../domain/level.js');
 
 const path = require('path');
 const dotenv = require('dotenv');
