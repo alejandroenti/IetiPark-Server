@@ -28,7 +28,8 @@ class Game {
             isMovingLeft: player.getGameState().isMovingLeft,
             isMovingRight: player.getGameState().isMovingRight,
             isJumping: player.getGameState().isJumping,
-            hasKey: player.getGameState().hasKey
+            hasKey: player.getGameState().hasKey,
+            hasCompletedLevel: player.getGameState().hasCompletedLevel
         }));
     }
 
@@ -64,8 +65,16 @@ class Game {
 
     update() {
         if (this.isPlaying()) {
+            const thereArePlayers = this.playerRegistry.getPlayersSnapshot().length > 0;
+            if (!thereArePlayers) {
+                return;
+            }
             this.gameEngine.update();
-            
+            const allPlayersCompletedLevel = this.playerRegistry.getPlayersSnapshot().every(player => player.getGameState().hasCompletedLevel);
+            if (allPlayersCompletedLevel) {
+                console.log('All players have completed the level!');
+                process.exit(0);
+            }
         }
     }
 }

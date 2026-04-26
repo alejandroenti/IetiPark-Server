@@ -31,6 +31,7 @@ class GameEngine {
 
     calculateGameStateFor(players) {
         for (const player of players) {
+            if (player.hasCompletedLevel()) continue; // Si el jugador ya ha completado el nivel, no calculamos su estado
             player.applyPendingInput();
             this.handleHorizontalMovementFor(player);
             this.handleVerticalMovementFor(player);
@@ -138,7 +139,7 @@ class GameEngine {
             console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has reached the door!`);
             if (this.level.isDoorOpen()) {
                 console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has passed through the open door and completed the level!`);
-                // TODO Marcar que jugador ha completado el nivel
+                player.completeLevel();
             } else if (player.getGameState().hasKey && !this.level.isDoorOpen()) {
                 console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has opened the door with the key!`);
                 this.level.openDoor();

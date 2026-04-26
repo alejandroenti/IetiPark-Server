@@ -93,6 +93,14 @@ class Player {
     removeKey() {
         this.playerGameState.hasKey = false;
     }
+
+    completeLevel() {
+        this.playerGameState.hasCompletedLevel = true;
+    }
+
+    hasCompletedLevel() {
+        return this.playerGameState.hasCompletedLevel;
+    }
 }
 
 module.exports = Player;
