@@ -86,6 +86,10 @@ class Player {
         return this.id;
     }
 
+    hasKey() {
+        return this.playerGameState.hasKey;
+    }
+
     giveKey() {
         this.playerGameState.hasKey = true;
     }

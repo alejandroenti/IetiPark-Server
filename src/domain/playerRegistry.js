@@ -116,6 +116,17 @@ class PlayerRegistry {
             i++;
         }
     }
+
+    getIndexInsideRegistryFor(player) {
+        let index = 1;
+        for (const p of this.players.values()) {
+            if (p.getId() === player.getId()) {
+                return index;
+            }
+            index++;
+        }
+        return 1;
+    }
 }
 
 module.exports = PlayerRegistry;

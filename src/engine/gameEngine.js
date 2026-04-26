@@ -38,7 +38,7 @@ class GameEngine {
             player.getGameState().hitbox.updateHitboxPosition(player.getGameState().x, player.getGameState().y);
             this.handleKeyCollectionFor(player);
             this.handleDoorInteractionFor(player);
-            //console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
+            console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
 
@@ -104,12 +104,27 @@ class GameEngine {
                 return false;
             }
         }
-        if (horizontalMovement) return true; // Si es un movimiento horizontal, no miramos colisión con el suelo
+        if (horizontalMovement) return true; // Si es un movimiento horizontal, no miramos interacciones verticales
         // Suelo
         const intersectsWithGrounds = this.hitboxIntesectsWithGrounds(hitbox);
         if (intersectsWithGrounds) {
             //console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
             return false;
+        }
+        // Zona de muerte
+        if (this.level.getDeadZonesHitboxes().length > 0) {
+            for (const deadZoneHitbox of this.level.getDeadZonesHitboxes()) {
+                if (hitbox.intersectsWith(deadZoneHitbox)) {
+                    console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with a death zone and will be reset to the initial position!`);
+                    const player = this.playerRegistry.getPlayerById(playerId);
+                    if (player.hasKey()) {
+                        player.removeKey();
+                        this.level.makeKeyAvailable();
+                    }
+                    player.resetGameState(this.playerRegistry.getIndexInsideRegistryFor(player)); // Reseteamos el estado del jugador a su posición inicial
+                    return false;
+                }
+            }
         }
         return true;
     }
