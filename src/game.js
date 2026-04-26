@@ -10,7 +10,7 @@ class Game {
         this.playerRegistry = new PlayerRegistry();
         this.state = 'play'; // wait, play, finish
         this.FirstLevel = new Level('first_level');
-        // TODO this.SecondLevel = new Level('second_level');
+        this.SecondLevel = new Level('second_level');
         this.currentLevel = this.FirstLevel;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
     }
@@ -73,9 +73,30 @@ class Game {
             const allPlayersCompletedLevel = this.playerRegistry.getPlayersSnapshot().every(player => player.getGameState().hasCompletedLevel);
             if (allPlayersCompletedLevel) {
                 console.log('All players have completed the level!');
+                this.handleChangingLevel();
                 process.exit(0);
             }
         }
+    }
+    
+    handleChangingLevel() {
+        this.changeCurrentLevelToNext();
+        console.log('Current level is now:', this.currentLevel.getName());
+        this.playerRegistry.resetGameStatesForAllPlayers();
+        console.log('All player game states have been reset for the new level.');
+        for (const player of this.playerRegistry.getPlayersSnapshot()) {
+            console.log(player.toString());
+        }
+    }
+
+    changeCurrentLevelToNext() {
+        if (this.currentLevel === this.FirstLevel) {
+            this.currentLevel = this.SecondLevel;
+        } else {
+            this.currentLevel = this.FirstLevel;
+        }
+        this.currentLevel.reset();
+        console.log(`[Game.changeCurrentLevelToNext] Loaded level: ${JSON.stringify(this.currentLevel, null, 2)}`);
     }
 }
 

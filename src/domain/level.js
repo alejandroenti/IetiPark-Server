@@ -19,6 +19,12 @@ class Level {
         this.key = this.level.sprites.find(sprite => sprite.name === 'key');
         this.keyHitbox = new Hitbox(this.key.x, this.key.y, this.key.width, this.key.height, 0.5, 0.5);
         this._isKeyTaken = false;
+        // Zona de muerte
+        this.deadZones = this.level.zones.filter(zone => zone.name === 'dead_zone');
+        this.deadZonesHitboxes = [];
+        if (this.deadZones.length > 0) {
+            this.deadZonesHitboxes = this.deadZones.map(zone => new Hitbox(zone.x, zone.y, zone.width, zone.height, 0, 0));
+        }
     }
 
     getName() {
@@ -39,6 +45,10 @@ class Level {
 
     getKeyHitbox() {
         return this.keyHitbox;
+    }
+
+    getDeadZonesHitboxes() {
+        return this.deadZonesHitboxes;
     }
 
     isKeyTaken() {
@@ -67,6 +77,11 @@ class Level {
             isDoorOpen: this.isDoorOpen(),
             isKeyTaken: this.isKeyTaken()
         };
+    }
+
+    reset() {
+        this._isDoorOpen = false;
+        this._isKeyTaken = false;
     }
 }
 

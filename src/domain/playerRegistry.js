@@ -109,6 +109,13 @@ class PlayerRegistry {
         }
     }
 
+    resetGameStatesForAllPlayers() {
+        let i = 1;
+        for (const player of this.players.values()) {
+            player.resetGameState(i);
+            i++;
+        }
+    }
 }
 
 module.exports = PlayerRegistry;
