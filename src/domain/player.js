@@ -103,7 +103,7 @@ class Player {
     }
 
     resetGameState(indexPosition) {
-        const startingX = (this.getGameState().width + 2) * indexPosition; // Ajusta la posición inicial según el índice del jugador, su ancho y un pequeño margen
+        const startingX = (this.getGameState().width + 2) * indexPosition + this.getGameState().width; // Ajusta la posición inicial según el índice del jugador, su ancho y un pequeño margen
         this.playerGameState = new PlayerGameState(startingX, 0); // Que empiece en el cielo, del nivel del Games_Tool
     }
 }

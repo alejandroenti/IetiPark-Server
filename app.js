@@ -40,6 +40,10 @@ logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_
 setInterval(() => {
     game.update();
     socketHandler.broadcast('GAME STATE', getGameState());
+    if (game.levelJustChanged) {
+        socketHandler.broadcast('LEVEL CHANGED', game.currentLevel.getName());
+        game.levelJustChanged = false;
+    }
 }, 1000 / 30);
 
 function getGameState() {

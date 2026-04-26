@@ -12,6 +12,7 @@ class Game {
         this.FirstLevel = new Level('first_level');
         this.SecondLevel = new Level('second_level');
         this.currentLevel = this.FirstLevel;
+        this.levelJustChanged = false;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
     }
 
@@ -74,7 +75,6 @@ class Game {
             if (allPlayersCompletedLevel) {
                 console.log('All players have completed the level!');
                 this.handleChangingLevel();
-                process.exit(0);
             }
         }
     }
@@ -97,6 +97,7 @@ class Game {
         }
         this.currentLevel.reset();
         console.log(`[Game.changeCurrentLevelToNext] Loaded level: ${JSON.stringify(this.currentLevel, null, 2)}`);
+        this.levelJustChanged = true;
     }
 }
 
