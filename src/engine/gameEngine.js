@@ -36,7 +36,8 @@ class GameEngine {
             this.handleVerticalMovementFor(player);
             player.getGameState().hitbox.updateHitboxPosition(player.getGameState().x, player.getGameState().y);
             this.handleKeyCollectionFor(player);
-            console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
+            this.handleDoorInteractionFor(player);
+            //console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
 
@@ -89,12 +90,16 @@ class GameEngine {
         // Puerta
         if (hitbox.intersectsWith(this.level.getDoorHitbox())) {
             console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has reached the door!`);
-            return false;
+            const canInteractWithDoor = this.level.isDoorOpen() || this.playerRegistry.getPlayerById(playerId).getGameState().hasKey;
+            if (!canInteractWithDoor) {
+                console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} cannot interact with the door because it's closed and they don't have the key!`);
+                return false;
+            }
         }
         // Paredes invisibles
         for (const invisibleWallHitbox of this.level.getInvisibleWallsHitboxes()) {
             if (hitbox.intersectsWith(invisibleWallHitbox)) {
-                console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with an invisible wall!`);
+                //console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with an invisible wall!`);
                 return false;
             }
         }
@@ -102,7 +107,7 @@ class GameEngine {
         // Suelo
         const intersectsWithGrounds = this.hitboxIntesectsWithGrounds(hitbox);
         if (intersectsWithGrounds) {
-            console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
+            //console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
             return false;
         }
         return true;
@@ -124,6 +129,23 @@ class GameEngine {
             console.log(`[GameEngine.handleKeyCollectionFor] Player ${player.getId()} has taken the key!`);
             this.level.takeKey();
             player.giveKey();
+        }
+    }
+
+    handleDoorInteractionFor(player) {
+        const playerHitbox = player.getGameState().hitbox;
+        if (playerHitbox.intersectsWith(this.level.getDoorHitbox())) {
+            console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has reached the door!`);
+            if (this.level.isDoorOpen()) {
+                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has passed through the open door and completed the level!`);
+                // TODO Marcar que jugador ha completado el nivel
+            } else if (player.getGameState().hasKey && !this.level.isDoorOpen()) {
+                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has opened the door with the key!`);
+                this.level.openDoor();
+                player.removeKey();
+            } else {
+                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} cannot open the door because it's closed and they don't have the key!`);
+            }
         }
     }
 }

@@ -19,6 +19,15 @@ class PlayerRegistry {
         return this.players.get(ws);
     }
 
+    getPlayerById(playerId) {
+        for (const player of this.players.values()) {
+            if (player.getId() === playerId) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     removePlayer(ws) {
         if (this.wsIsRegistered(ws)) {
             this.players.delete(ws);
