@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.get('/download', (req, res) => {
-  const downloadUrl = `${req.protocol}://${req.get('host')}/ietipark.apk`;
+  const downloadUrl = `${req.protocol}://pico1.ieti.site/ietipark.apk`;
   res.setHeader('Content-Type', 'text/html');
   res.send(`<!DOCTYPE html>
 <html lang="ca">
