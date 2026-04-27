@@ -58831,8 +58831,7 @@ return A.J(null,r)
 case 1:return A.I(p.at(-1),r)}})
 return A.K($async$mU,r)},
 C2(){var s,r,q,p=this
-//try{r=A.ajP(A.a8m(A.jT("ws://localhost:3000"),null))
-try{r=A.ak_(A.a8x(A.jS((window.location.protocol==="https:"?"wss://":"ws://")+window.location.host),null))
+try{r=A.ajP(A.a8m(A.jT("wss://pico1.ieti.site"),null))
 p.f=r
 r=r.r.b
 r===$&&A.b()
