@@ -97,6 +97,7 @@ class Game {
         }
         this.currentLevel.reset();
         console.log(`[Game.changeCurrentLevelToNext] Loaded level: ${JSON.stringify(this.currentLevel, null, 2)}`);
+        this.gameEngine.updateLevel(this.currentLevel);
         this.levelJustChanged = true;
     }
 }
