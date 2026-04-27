@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const Game = require('./src/game');
 const GameService = require('./src/services/gameService');
 const SocketHandler = require('./src/network/socketHandler');
+const MongoService = require('./src/services/mongoService');
 
 const envMode = process.env.NODE_ENV || 'dev';
 dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
@@ -36,6 +37,20 @@ socketHandler.gameService = gameService;
 socketHandler.initialize();
 
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
+
+async function initializeMongo() {
+    const mongo = new MongoService({ dbName: 'IetiPark' });
+    await mongo.connect()
+    console.log('Connected to MongoDB');
+    await mongo.createCollection('levels');
+    await mongo.createCollection('players');
+    await mongo.createCollection('games');
+    await mongo.createCollection('timeRecords');
+    console.log('Collections created');
+    await mongo.dispose();
+    console.log('MongoDB connection closed');
+}
+initializeMongo();
 
 setInterval(() => {
     game.update();
