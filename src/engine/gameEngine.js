@@ -164,6 +164,10 @@ class GameEngine {
             }
         }
     }
+
+    updateLevel(newLevel) {
+        this.level = newLevel;
+    }
 }
 
 module.exports = GameEngine;
