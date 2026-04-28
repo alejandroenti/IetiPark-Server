@@ -1,3 +1,5 @@
+const geoip = require('geoip-lite');
+
 class SocketHandler {
     /**
      * @param {{
@@ -13,9 +15,25 @@ class SocketHandler {
     }
 
     initialize() {
-        this.wss.on('connection', (ws) => {
-            this.logger.debug('Client connected');
+        this.wss.on('connection', (ws, req) => {
+            this.logger.debug('[SocketHandler.initialize] Client connected');
             this.gameService.notifyPlayersUpdated();
+
+            // Obtener IP
+            const xff = req.headers['x-forwarded-for'];
+            const forwarded = Array.isArray(xff) ? xff[0] : xff;
+            const rawIp = (forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress) || null;
+            const ip = rawIp ? rawIp.replace(/^::ffff:/, '') : null;
+
+            // Obtener país
+            let country = 'Unknown';
+            if (ip) {
+                const geo = geoip.lookup(ip);
+                if (geo) {
+                    country = geo.country; // Devuelve código país ('ES', 'US', 'AR', etc.)
+                }
+            }
+            this.logger.info(`New client connected from IP: ${ip}, Country: ${country}`);
 
             ws.on('message', (data) => {
                 const message = this.parseMessage(data, ws);
