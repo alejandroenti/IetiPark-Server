@@ -23,6 +23,7 @@
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "geoip-lite": "^2.0.1",
     "mongodb": "^7.1.1",
     "pm2": "^6.0.14",
     "winston": "^3.19.0",
