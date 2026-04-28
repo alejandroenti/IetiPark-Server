@@ -44,8 +44,11 @@ class GameEngine {
 
     handleHorizontalMovementFor(player) {
         const playerGameState = player.getGameState();
-        const currentX = playerGameState.x;
-        const newX = currentX + (playerGameState.isMovingLeft ? -this.speed : 0) + (playerGameState.isMovingRight ? this.speed : 0);
+        const currentX = playerGameState.x;    
+        const appliedSpeed = player.hasKey() ?
+            this.speed * 0.5
+            : this.speed;        
+        const newX = currentX + (playerGameState.isMovingLeft ? -appliedSpeed : 0) + (playerGameState.isMovingRight ? appliedSpeed : 0);
         const hitboxWithNewX = new Hitbox(newX, playerGameState.y, playerGameState.width, playerGameState.height, playerGameState.hitbox.anchorX, playerGameState.hitbox.anchorY);
         if (this.hitboxDoesNotIntersectWithAnyOtherHitbox(player.getId(), hitboxWithNewX, true)) {
             playerGameState.x = newX;
