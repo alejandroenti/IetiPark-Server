@@ -13,9 +13,18 @@ class SocketHandler {
     }
 
     initialize() {
-        this.wss.on('connection', (ws) => {
+        this.wss.on('connection', (ws, req) => {
             this.logger.debug('Client connected');
             this.gameService.notifyPlayersUpdated();
+
+            const xff = req.headers['x-forwarded-for'];
+            const forwarded = Array.isArray(xff) ? xff[0] : xff;
+            const rawIp = (forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress) || null;
+            const ip = rawIp ? rawIp.replace(/^::ffff:/, '') : null;
+            console.log(`[SocketHandler.initialize] New connection with IP: ${ip}`);
+
+            // const geo = ip ? geoip.lookup(ip) : null;
+            // const country = geo?.country || 'UN'; // ISO-2, p.ej. ES, FR
 
             ws.on('message', (data) => {
                 const message = this.parseMessage(data, ws);
