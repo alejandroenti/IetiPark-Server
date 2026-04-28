@@ -14,6 +14,7 @@ class Game {
         this.currentLevel = this.FirstLevel;
         this.levelJustChanged = false;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
+        this.allPlayersJustDisconnected = false;
     }
 
     getPlayerRegistry() {
@@ -68,8 +69,16 @@ class Game {
         if (this.isPlaying()) {
             const thereArePlayers = this.playerRegistry.getPlayersSnapshot().length > 0;
             if (!thereArePlayers) {
+                if (this.allPlayersJustDisconnected) {
+                    console.log('All players have disconnected. Resetting the game to the first level.');
+                    this.currentLevel = this.FirstLevel;
+                    this.currentLevel.reset();
+                    this.gameEngine.updateLevel(this.currentLevel);
+                    this.allPlayersJustDisconnected = false;
+                }
                 return;
             }
+            this.allPlayersJustDisconnected = true;
             this.gameEngine.update();
             const allPlayersCompletedLevel = this.playerRegistry.getPlayersSnapshot().every(player => player.getGameState().hasCompletedLevel);
             if (allPlayersCompletedLevel) {
