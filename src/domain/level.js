@@ -32,6 +32,12 @@ class Level {
         if (this.deadZones.length > 0) {
             this.deadZonesHitboxes = this.deadZones.map(zone => new Hitbox(zone.x, zone.y, zone.width, zone.height, 0, 0));
         }
+        // Plataforma extendida
+        this.extendedPlatform = this.level.zones.filter(zone => zone.name === 'extended_platform');
+        this.extendedPlatformHitbox = [];
+        if (this.extendedPlatform.length > 0) {
+            this.extendedPlatformHitbox = this.extendedPlatform.map(zone => new Hitbox(zone.x, zone.y, zone.width, zone.height, 0, 0));
+        }
     }
 
     getName() {
@@ -56,6 +62,10 @@ class Level {
 
     getDeadZonesHitboxes() {
         return this.deadZonesHitboxes;
+    }
+
+    getExtendedPlatformHitboxes() {
+        return this.extendedPlatformHitbox;
     }
 
     isKeyTaken() {
