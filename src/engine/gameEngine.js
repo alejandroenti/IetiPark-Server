@@ -3,6 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const Hitbox = require("./hitbox");
 const envMode = process.env.NODE_ENV || 'dev';
+const logger = require('../logger');
 dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
 
 /**
@@ -21,7 +22,7 @@ class GameEngine {
     constructor(playerRegistry, level) {
         this.playerRegistry = playerRegistry;
         this.level = level;
-        console.log(`[GameEngine.constructor] Loaded level: ${JSON.stringify(this.level, null, 2)}`);
+        logger.debug(`[GameEngine.constructor] Loaded level: ${JSON.stringify(this.level, null, 2)}`);
     }
 
     update() {
@@ -38,7 +39,7 @@ class GameEngine {
             player.getGameState().hitbox.updateHitboxPosition(player.getGameState().x, player.getGameState().y);
             this.handleKeyCollectionFor(player);
             this.handleDoorInteractionFor(player);
-            console.log(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
+            //logger.debug(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
 
@@ -88,22 +89,23 @@ class GameEngine {
             if (player.getId() === playerId) continue;
             const playerHitbox = player.getGameState().hitbox;
             if (hitbox.intersectsWith(playerHitbox)) {
+                //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with player ${player.getId()}!`);
                 return false;
             }
         }
         // Puerta
         if (hitbox.intersectsWith(this.level.getDoorHitbox())) {
-            console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has reached the door!`);
+            //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has reached the door!`);
             const canInteractWithDoor = this.level.isDoorOpen() || this.playerRegistry.getPlayerById(playerId).getGameState().hasKey;
             if (!canInteractWithDoor) {
-                console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} cannot interact with the door because it's closed and they don't have the key!`);
+                //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} cannot interact with the door because it's closed and they don't have the key!`);
                 return false;
             }
         }
         // Paredes invisibles
         for (const invisibleWallHitbox of this.level.getInvisibleWallsHitboxes()) {
             if (hitbox.intersectsWith(invisibleWallHitbox)) {
-                //console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with an invisible wall!`);
+                //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with an invisible wall!`);
                 return false;
             }
         }
@@ -111,14 +113,14 @@ class GameEngine {
         // Suelo
         const intersectsWithGrounds = this.hitboxIntesectsWithGrounds(hitbox);
         if (intersectsWithGrounds) {
-            //console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
+            //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with the ground!`);
             return false;
         }
         // Zona de muerte
         if (this.level.getDeadZonesHitboxes().length > 0) {
             for (const deadZoneHitbox of this.level.getDeadZonesHitboxes()) {
                 if (hitbox.intersectsWith(deadZoneHitbox)) {
-                    console.log(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with a death zone and will be reset to the initial position!`);
+                    logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with a death zone and will be reset to the initial position!`);
                     const player = this.playerRegistry.getPlayerById(playerId);
                     if (player.hasKey()) {
                         player.removeKey();
@@ -145,7 +147,7 @@ class GameEngine {
         if (this.level.isKeyTaken()) return;
         const playerHitbox = player.getGameState().hitbox;
         if (playerHitbox.intersectsWith(this.level.getKeyHitbox())) {
-            console.log(`[GameEngine.handleKeyCollectionFor] Player ${player.getId()} has taken the key!`);
+            logger.info(`[GameEngine.handleKeyCollectionFor] Player ${player.getId()} has taken the key!`);
             this.level.takeKey();
             player.giveKey();
         }
@@ -154,16 +156,16 @@ class GameEngine {
     handleDoorInteractionFor(player) {
         const playerHitbox = player.getGameState().hitbox;
         if (playerHitbox.intersectsWith(this.level.getDoorHitbox())) {
-            console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has reached the door!`);
+            //logger.debug(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has reached the door!`);
             if (this.level.isDoorOpen()) {
-                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has passed through the open door and completed the level!`);
+                logger.info(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has passed through the open door and completed the level!`);
                 player.completeLevel();
             } else if (player.getGameState().hasKey && !this.level.isDoorOpen()) {
-                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has opened the door with the key!`);
+                logger.info(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} has opened the door with the key!`);
                 this.level.openDoor();
                 player.removeKey();
             } else {
-                console.log(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} cannot open the door because it's closed and they don't have the key!`);
+                logger.debug(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} cannot open the door because it's closed and they don't have the key!`);
             }
         }
     }
