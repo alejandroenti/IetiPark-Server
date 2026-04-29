@@ -87,6 +87,7 @@ class GameEngine {
         const players = this.playerRegistry.players.values();
         for (const player of players) {
             if (player.getId() === playerId) continue;
+            if (player.hasCompletedLevel()) continue;
             const playerHitbox = player.getGameState().hitbox;
             if (hitbox.intersectsWith(playerHitbox)) {
                 //logger.debug(`[GameEngine.hitboxDoesNotIntersectWithAnyOtherHitbox] Player ${playerId} has collided with player ${player.getId()}!`);
