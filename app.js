@@ -1,6 +1,10 @@
-const { WebSocketServer } = require('ws');
 const path = require('path');
 const dotenv = require('dotenv');
+
+const envMode = process.env.NODE_ENV || 'dev';
+dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
+
+const { WebSocketServer } = require('ws');
 const express = require('express');
 
 const Game = require('./src/game');
@@ -8,9 +12,6 @@ const GameService = require('./src/services/gameService');
 const SocketHandler = require('./src/network/socketHandler');
 const MongoService = require('./src/services/mongoService');
 const logger = require('./src/logger');
-
-const envMode = process.env.NODE_ENV || 'dev';
-dotenv.config({ path: path.resolve(process.cwd(), `.env.${envMode}`) });
 
 const publicDir = path.resolve(__dirname, 'public');
 
