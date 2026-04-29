@@ -19,6 +19,12 @@ class Level {
         this.key = this.level.sprites.find(sprite => sprite.name === 'key');
         this.keyHitbox = new Hitbox(this.key.x, this.key.y, this.key.width, this.key.height, 0.5, 0.5);
         this._isKeyTaken = false;
+        // Palanca
+        this.lever = this.level.sprites.filter(sprite => sprite.name === 'lever');
+        this.leverHitbox = [];
+        if (this.lever.length > 0) {
+            this.leverHitbox = this.lever.map(lever => new Hitbox(lever.x, lever.y, 0.16*lever.width, 0.50*lever.height, 0.5, 0.5)); // 0.16 y 0.50 son para ajustar el hitbox a la parte interactiva de la palanca, que es más pequeña que la imagen completa
+        }
         // Zona de muerte
         this.deadZones = this.level.zones.filter(zone => zone.name === 'dead_zone');
         this.deadZonesHitboxes = [];

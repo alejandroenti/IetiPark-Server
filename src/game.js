@@ -12,7 +12,7 @@ class Game {
         this.state = 'play'; // wait, play, finish
         this.FirstLevel = new Level('first_level');
         this.SecondLevel = new Level('second_level');
-        this.currentLevel = this.FirstLevel;
+        this.currentLevel = this.SecondLevel;
         this.levelJustChanged = false;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
         this.allPlayersJustDisconnected = false;
