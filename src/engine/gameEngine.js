@@ -39,6 +39,7 @@ class GameEngine {
             player.getGameState().hitbox.updateHitboxPosition(player.getGameState().x, player.getGameState().y);
             this.handleKeyCollectionFor(player);
             this.handleDoorInteractionFor(player);
+            this.handleLeverInteractionFor(player);
             //logger.debug(`[GameEngine.calculateGameStateFor] player AFTER update --> ${player.toString()}`);
         }
     }
@@ -167,6 +168,16 @@ class GameEngine {
                 player.removeKey();
             } else {
                 logger.debug(`[GameEngine.handleDoorInteractionFor] Player ${player.getId()} cannot open the door because it's closed and they don't have the key!`);
+            }
+        }
+    }
+
+    handleLeverInteractionFor(player) {
+        const playerHitbox = player.getGameState().hitbox;
+        for (const leverHitbox of this.level.leverHitbox) {
+            if (playerHitbox.intersectsWith(leverHitbox)) {
+                logger.info(`************* [GameEngine.handleLeverInteractionFor] Player ${player.getId()} has interacted with a lever!`);
+                // Aquí puedes definir la lógica que quieras que ocurra al interactuar con la palanca, por ejemplo:
             }
         }
     }
