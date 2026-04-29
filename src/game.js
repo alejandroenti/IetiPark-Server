@@ -1,6 +1,7 @@
 const GameEngine = require("./engine/gameEngine");
 const PlayerRegistry = require("./domain/playerRegistry");
 const Level = require("./domain/level");
+const logger = require("./logger");
 
 class Game {
     fps = 60;
@@ -70,7 +71,7 @@ class Game {
             const thereArePlayers = this.playerRegistry.getPlayersSnapshot().length > 0;
             if (!thereArePlayers) {
                 if (this.allPlayersJustDisconnected) {
-                    console.log('All players have disconnected. Resetting the game to the first level.');
+                    logger.info('All players have disconnected. Resetting the game to the first level.');
                     this.currentLevel = this.FirstLevel;
                     this.currentLevel.reset();
                     this.gameEngine.updateLevel(this.currentLevel);
@@ -82,7 +83,7 @@ class Game {
             this.gameEngine.update();
             const allPlayersCompletedLevel = this.playerRegistry.getPlayersSnapshot().every(player => player.getGameState().hasCompletedLevel);
             if (allPlayersCompletedLevel) {
-                console.log('All players have completed the level!');
+                logger.info('All players have completed the level!');
                 this.handleChangingLevel();
             }
         }
@@ -90,11 +91,11 @@ class Game {
     
     handleChangingLevel() {
         this.changeCurrentLevelToNext();
-        console.log('Current level is now:', this.currentLevel.getName());
+        logger.debug(`[Game.handleChangingLevel] Current level is now: ${this.currentLevel.getName()}`);
         this.playerRegistry.resetGameStatesForAllPlayers();
-        console.log('All player game states have been reset for the new level.');
+        logger.debug('[Game.handleChangingLevel] All player game states have been reset for the new level.');
         for (const player of this.playerRegistry.getPlayersSnapshot()) {
-            console.log(player.toString());
+            logger.debug(`[Game.handleChangingLevel] Player state after reset: ${player.toString()}`);
         }
     }
 
@@ -105,7 +106,7 @@ class Game {
             this.currentLevel = this.FirstLevel;
         }
         this.currentLevel.reset();
-        console.log(`[Game.changeCurrentLevelToNext] Loaded level: ${JSON.stringify(this.currentLevel, null, 2)}`);
+        logger.debug(`[Game.changeCurrentLevelToNext] Loaded level: ${JSON.stringify(this.currentLevel, null, 2)}`);
         this.gameEngine.updateLevel(this.currentLevel);
         this.levelJustChanged = true;
     }
