@@ -125,7 +125,7 @@ app.get('/download', (req, res) => {
 
 // Inicialitzar servidor HTTP
 const httpServer = app.listen(process.env.SERVER_PORT, () => {
-    console.log(`Servidor HTTP escoltant a: http://localhost:${process.env.SERVER_PORT}`);
+    logger.info(`HTTP server is running on http://localhost:${process.env.SERVER_PORT}`);
 });
 
 const game = new Game();
@@ -146,14 +146,14 @@ logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_
 async function initializeMongo() {
     const mongo = new MongoService({ dbName: 'IetiPark' });
     await mongo.connect()
-    console.log('Connected to MongoDB');
+    logger.info('Connected to MongoDB');
     await mongo.createCollection('levels');
     await mongo.createCollection('players');
     await mongo.createCollection('games');
     await mongo.createCollection('timeRecords');
-    console.log('Collections created');
+    logger.info('Collections created');
     await mongo.dispose();
-    console.log('MongoDB connection closed');
+    logger.info('MongoDB connection closed');
 }
 initializeMongo();
 
