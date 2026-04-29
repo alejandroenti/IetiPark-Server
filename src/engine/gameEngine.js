@@ -175,9 +175,9 @@ class GameEngine {
     handleLeverInteractionFor(player) {
         const playerHitbox = player.getGameState().hitbox;
         for (const leverHitbox of this.level.leverHitbox) {
-            if (playerHitbox.intersectsWith(leverHitbox)) {
-                logger.info(`************* [GameEngine.handleLeverInteractionFor] Player ${player.getId()} has interacted with a lever!`);
-                // Aquí puedes definir la lógica que quieras que ocurra al interactuar con la palanca, por ejemplo:
+            if (playerHitbox.intersectsWith(leverHitbox) && !this.level.isLeverActivated()) {
+                logger.info(`Player ${player.getName()} has activated the lever!`);
+                this.level.activateLever();
             }
         }
     }

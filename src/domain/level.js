@@ -25,6 +25,7 @@ class Level {
         if (this.lever.length > 0) {
             this.leverHitbox = this.lever.map(lever => new Hitbox(lever.x, lever.y, 0.16*lever.width, 0.50*lever.height, 0.5, 0.5)); // 0.16 y 0.50 son para ajustar el hitbox a la parte interactiva de la palanca, que es más pequeña que la imagen completa
         }
+        this._isLeverActivated = false;
         // Zona de muerte
         this.deadZones = this.level.zones.filter(zone => zone.name === 'dead_zone');
         this.deadZonesHitboxes = [];
@@ -77,17 +78,35 @@ class Level {
         this._isDoorOpen = true;
     }
 
+    closeDoor() {
+        this._isDoorOpen = false;
+    }
+
+    isLeverActivated() {
+        return this._isLeverActivated;
+    }
+
+    activateLever() {
+        this._isLeverActivated = true;
+    }
+
+    resetLever() {
+        this._isLeverActivated = false;
+    }
+
     getCurrentLevelState() {
         return {
             name: this.getName(),
             isDoorOpen: this.isDoorOpen(),
-            isKeyTaken: this.isKeyTaken()
+            isKeyTaken: this.isKeyTaken(),
+            isLeverActivated: this.isLeverActivated()
         };
     }
 
     reset() {
-        this._isDoorOpen = false;
-        this._isKeyTaken = false;
+        this.makeKeyAvailable();
+        this.resetLever();
+        this.closeDoor();
     }
 }
 
