@@ -137,8 +137,15 @@ class GameEngine {
     }
 
     hitboxIntesectsWithGrounds(hitbox) {
+        // Suelo normal
         for (const groundHitbox of this.level.getGroundHitboxes()) {
             if (hitbox.intersectsWith(groundHitbox)) {
+                return true;
+            }
+        }
+        // Plataforma extendida
+        for (const extendedPlatformHitbox of this.level.getExtendedPlatformHitboxes()) {
+            if (hitbox.intersectsWith(extendedPlatformHitbox) && this.level.isLeverActivated()) {
                 return true;
             }
         }
@@ -176,7 +183,7 @@ class GameEngine {
         const playerHitbox = player.getGameState().hitbox;
         for (const leverHitbox of this.level.leverHitbox) {
             if (playerHitbox.intersectsWith(leverHitbox) && !this.level.isLeverActivated()) {
-                logger.info(`Player ${player.getName()} has activated the lever!`);
+                logger.info(`Player ${player.name} has activated the lever!`);
                 this.level.activateLever();
             }
         }
