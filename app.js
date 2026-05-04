@@ -1,4 +1,5 @@
 const path = require('path');
+const crypto = require('crypto');
 const dotenv = require('dotenv');
 
 const envMode = process.env.NODE_ENV || 'dev';
@@ -140,6 +141,21 @@ async function initializeMongo() {
   await mongoService.createCollection('players');
   await mongoService.createCollection('games');
   await mongoService.createCollection('levels');
+  const isLevelsEmpty = await (await mongoService.getCollection('levels')).countDocuments() === 0;
+  logger.debug(`Levels collection is ${isLevelsEmpty ? 'empty' : 'not empty'}`);
+  if (isLevelsEmpty) {
+    logger.debug('Levels collection is empty, inserting initial levels');
+    await (await mongoService.getCollection('levels')).insertMany([
+      {
+        _id: crypto.randomUUID(),
+        estimacio_del_temps_per_a_completar_lo: 60,
+      }, // first_level
+      {
+        _id: crypto.randomUUID(),
+        estimacio_del_temps_per_a_completar_lo: 120,
+      } // second_level
+    ]);
+  }
   await mongoService.createCollection('players_levels');
   await mongoService.createCollection('player_categories');
   await mongoService.ensurePlayersIndexes();
