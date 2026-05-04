@@ -16,6 +16,7 @@ class Game {
         this.levelJustChanged = false;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
         this.allPlayersJustDisconnected = false;
+        this.secondLevelJustCompleted = false;
     }
 
     getPlayerRegistry() {
@@ -84,9 +85,24 @@ class Game {
             const allPlayersCompletedLevel = this.playerRegistry.getPlayersSnapshot().every(player => player.getGameState().hasCompletedLevel);
             if (allPlayersCompletedLevel) {
                 logger.info('All players have completed the level!');
+
+                // Marcamos evento antes de cambiar de nivel para saber qué nivel se completó realmente.
+                if (this.currentLevel.getName() === 'second_level') {
+                    this.secondLevelJustCompleted = true;
+                }
+
                 this.handleChangingLevel();
             }
         }
+    }
+
+    consumeSecondLevelCompletionEvent() {
+        if (!this.secondLevelJustCompleted) {
+            return false;
+        }
+
+        this.secondLevelJustCompleted = false;
+        return true;
     }
     
     handleChangingLevel() {

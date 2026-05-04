@@ -55,15 +55,15 @@ class SocketHandler {
                 }
             });
 
-            ws.on('close', () => {
+            ws.on('close', async () => {
                 this.logger.info('Client disconnected');
-                this.gameService.handleDisconnect(ws, Array.from(this.wss.clients));
+                await this.gameService.handleDisconnect(ws, Array.from(this.wss.clients));
             });
 
-            ws.on('error', () => {
+            ws.on('error', async () => {
                 this.logger.error('Error in connection with a WebSocket');
                 this.logger.debug(`Removing player with name=${this.gameService.playerRegistry.getPlayerName(ws)} removed from players due to connection error`);
-                this.gameService.handleDisconnect(ws, Array.from(this.wss.clients));
+                await this.gameService.handleDisconnect(ws, Array.from(this.wss.clients));
             });
         });
     }

@@ -1,4 +1,5 @@
 const Player = require('../domain/player');
+const crypto = require('crypto');
 
 class GameService {
     /**
@@ -16,6 +17,7 @@ class GameService {
         this.mongoService = mongoService;
         this.sendMessage = sendMessage;
         this.broadcast = broadcast;
+        this.currentGameStartDate = null;
     }
 
     get playerRegistry() {
@@ -23,6 +25,8 @@ class GameService {
     }
 
     async handleJoin(payload, ws) {
+        const playersBeforeJoin = this.playerRegistry.getSize();
+
         if (this.playerRegistry.wsIsRegistered(ws)) {
             this.sendMessage(ws, 'REFUSED JOIN', 'You are already registered');
             this.logger.info('A player tried to join but was already registered');
@@ -69,6 +73,10 @@ class GameService {
         this.playerRegistry.addPlayer(ws, newPlayer);
         this.logger.info(`New registered player: ${playerDbRecord.nom}`);
 
+        if (playersBeforeJoin === 0) {
+            this.startGameIfNeeded();
+        }
+
         this.sendMessage(ws, 'ACCEPTED JOIN', null);
         this.notifyPlayersUpdated();
         this.handleGameState();
@@ -107,12 +115,57 @@ class GameService {
         this.playerRegistry.setJump(ws);
     }
 
-    handleDisconnect(ws, activeSockets) {
+    async handleDisconnect(ws, activeSockets) {
         this.handleKeyUnassignmentForDisconnectedPlayer(ws);
         this.playerRegistry.removePlayer(ws);
         this.playerRegistry.removeGhostPlayers(activeSockets);
+
+        if (this.playerRegistry.getSize() === 0) {
+            await this.finishCurrentGameIfNeeded();
+        }
+
         this.notifyPlayersUpdated();
         this.handleGameState();
+    }
+
+    startGameIfNeeded() {
+        if (this.currentGameStartDate) {
+            return;
+        }
+
+        this.currentGameStartDate = new Date();
+        this.logger.info(`A new game has started at ${this.currentGameStartDate.toISOString()}`);
+    }
+
+    async finishCurrentGameIfNeeded() {
+        if (!this.currentGameStartDate) {
+            return;
+        }
+
+        const startDate = this.currentGameStartDate;
+        const endDate = new Date();
+
+        try {
+            const games = await this.mongoService.getCollection('games');
+            await games.insertOne({
+                _id: crypto.randomUUID(),
+                hora_de_comencament_de_la_partida: startDate,
+                hora_de_finalitzacio_de_la_partida: endDate
+            });
+
+            this.logger.info(`Game saved in MongoDB (start=${startDate.toISOString()}, end=${endDate.toISOString()})`);
+            this.currentGameStartDate = null;
+        } catch (error) {
+            this.logger.error(`Error saving game in MongoDB: ${error.message}`);
+        }
+    }
+
+    async handleSecondLevelCompletionIfNeeded() {
+        if (!this.game.consumeSecondLevelCompletionEvent()) {
+            return;
+        }
+
+        await this.finishCurrentGameIfNeeded();
     }
 
     /**
