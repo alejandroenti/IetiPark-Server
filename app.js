@@ -136,10 +136,11 @@ async function initializeMongo() {
     const mongo = new MongoService({ dbName: 'IetiPark' });
     await mongo.connect()
     logger.info('Connected to MongoDB');
-    await mongo.createCollection('levels');
     await mongo.createCollection('players');
     await mongo.createCollection('games');
-    await mongo.createCollection('timeRecords');
+    await mongo.createCollection('levels');
+    await mongo.createCollection('players_levels');
+    await mongo.createCollection('player_categories');
     logger.info('Collections created');
     await mongo.dispose();
     logger.info('MongoDB connection closed');
