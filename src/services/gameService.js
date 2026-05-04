@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const Player = require('../domain/player');
 
 class GameService {
@@ -6,13 +5,15 @@ class GameService {
      * @param {{
      * game: import('../game'),
      * logger: import('winston').Logger,
+     * mongoService: import('./mongoService'),
      * sendMessage: (ws: import('ws').WebSocket, type: string, payload: unknown) => void,
      * broadcast: (type: string, payload: unknown) => void
      * }} dependencies
      */
-    constructor({ game, logger, sendMessage, broadcast }) {
+    constructor({ game, logger, mongoService, sendMessage, broadcast }) {
         this.game = game;
         this.logger = logger;
+        this.mongoService = mongoService;
         this.sendMessage = sendMessage;
         this.broadcast = broadcast;
     }
@@ -21,7 +22,7 @@ class GameService {
         return this.game.getPlayerRegistry();
     }
 
-    handleJoin(payload, ws) {
+    async handleJoin(payload, ws) {
         if (this.playerRegistry.wsIsRegistered(ws)) {
             this.sendMessage(ws, 'REFUSED JOIN', 'You are already registered');
             this.logger.info('A player tried to join but was already registered');
@@ -36,6 +37,13 @@ class GameService {
         }
 
         const playerName = payload;
+        if (typeof playerName !== 'string' || !playerName.trim()) {
+            this.sendMessage(ws, 'REFUSED JOIN', 'Player name must be a non-empty string');
+            ws.close();
+            this.logger.info('A player tried to join with an invalid name');
+            return;
+        }
+
         if (this.playerRegistry.nameIsAlreadyTaken(playerName)) {
             this.sendMessage(ws, 'REFUSED JOIN', 'Player name already taken');
             ws.close();
@@ -43,12 +51,23 @@ class GameService {
             return;
         }
 
-        const playerId = crypto.randomUUID();
-        const newPlayer = new Player(playerId, playerName);
-        this.logger.debug(`New Player object generated (playerId=${playerId}, playerName=${playerName})`);
+        let playerDbRecord;
+        try {
+            // Si existe `nom`, reutiliza `id`; si no existe, crea un registro nuevo.
+            playerDbRecord = await this.mongoService.findOrCreatePlayerByNom(playerName);
+        } catch (error) {
+            this.logger.error(`Error creating/finding player in MongoDB: ${error.message}`);
+            this.sendMessage(ws, 'REFUSED JOIN', 'Internal error while creating player');
+            ws.close();
+            return;
+        }
+
+        const playerId = playerDbRecord.id;
+        const newPlayer = new Player(playerId, playerDbRecord.nom);
+        this.logger.debug(`Player object generated from MongoDB (playerId=${playerId}, playerName=${playerDbRecord.nom}, created=${playerDbRecord.created})`);
 
         this.playerRegistry.addPlayer(ws, newPlayer);
-        this.logger.info(`New registered player: ${playerName}`);
+        this.logger.info(`New registered player: ${playerDbRecord.nom}`);
 
         this.sendMessage(ws, 'ACCEPTED JOIN', null);
         this.notifyPlayersUpdated();

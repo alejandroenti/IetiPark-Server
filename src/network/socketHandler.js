@@ -35,7 +35,7 @@ class SocketHandler {
             }
             this.logger.info(`New client connected from IP: ${ip}, Country: ${country}`);
 
-            ws.on('message', (data) => {
+            ws.on('message', async (data) => {
                 const message = this.parseMessage(data, ws);
                 if (!message) {
                     return;
@@ -47,7 +47,12 @@ class SocketHandler {
                     return;
                 }
 
-                this.delegateMessage(message, ws);
+                try {
+                    await this.delegateMessage(message, ws);
+                } catch (error) {
+                    this.logger.error(`Unexpected error while delegating message: ${error.message}`);
+                    this.sendMessage(ws, 'INTERNAL ERROR', 'Server could not process your message');
+                }
             });
 
             ws.on('close', () => {
@@ -89,10 +94,10 @@ class SocketHandler {
         return true;
     }
 
-    delegateMessage(message, ws) {
+    async delegateMessage(message, ws) {
         switch (message.type) {
             case 'JOIN':
-                this.gameService.handleJoin(message.payload, ws);
+                await this.gameService.handleJoin(message.payload, ws);
                 break;
             case 'MOVE':
                 this.gameService.handleMove(message.payload, ws);

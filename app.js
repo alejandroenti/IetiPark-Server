@@ -119,11 +119,13 @@ const httpServer = app.listen(process.env.SERVER_PORT, () => {
 
 const game = new Game();
 const wss = new WebSocketServer({ server: httpServer , perMessageDeflate: true });
+const mongoService = new MongoService({ dbName: 'IetiPark' });
 
 const socketHandler = new SocketHandler({ wss, logger, gameService: null });
 const gameService = new GameService({
     game,
     logger,
+  mongoService,
     sendMessage: socketHandler.sendMessage.bind(socketHandler),
     broadcast: socketHandler.broadcast.bind(socketHandler)
 });
@@ -133,17 +135,15 @@ socketHandler.initialize();
 logger.info(`WebSocket server is running on ws://localhost:${process.env.SERVER_PORT}`);
 
 async function initializeMongo() {
-    const mongo = new MongoService({ dbName: 'IetiPark' });
-    await mongo.connect()
+  await mongoService.connect();
     logger.info('Connected to MongoDB');
-    await mongo.createCollection('players');
-    await mongo.createCollection('games');
-    await mongo.createCollection('levels');
-    await mongo.createCollection('players_levels');
-    await mongo.createCollection('player_categories');
-    logger.info('Collections created');
-    await mongo.dispose();
-    logger.info('MongoDB connection closed');
+  await mongoService.createCollection('players');
+  await mongoService.createCollection('games');
+  await mongoService.createCollection('levels');
+  await mongoService.createCollection('players_levels');
+  await mongoService.createCollection('player_categories');
+  await mongoService.ensurePlayersIndexes();
+  logger.info('Collections and indexes ensured');
 }
 initializeMongo();
 
