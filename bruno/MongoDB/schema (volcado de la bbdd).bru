@@ -1,0 +1,16 @@
+meta {
+  name: schema (volcado de la bbdd)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{HTTP_URI}}/schema
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
