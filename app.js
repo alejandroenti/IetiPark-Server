@@ -122,6 +122,33 @@ const game = new Game();
 const wss = new WebSocketServer({ server: httpServer , perMessageDeflate: true });
 const mongoService = new MongoService({ dbName: 'IetiPark' });
 
+app.get('/schema', async (req, res) => {
+  try {
+    const [players, games, levels, playersLevels, playerCategories] = await Promise.all([
+      (await mongoService.getCollection('players')).find({}).toArray(),
+      (await mongoService.getCollection('games')).find({}).toArray(),
+      (await mongoService.getCollection('levels')).find({}).toArray(),
+      (await mongoService.getCollection('players_levels')).find({}).toArray(),
+      (await mongoService.getCollection('player_categories')).find({}).toArray()
+    ]);
+
+    return res.status(200).json({
+      data: {
+        players,
+        games,
+        levels,
+        players_levels: playersLevels,
+        player_categories: playerCategories
+      }
+    });
+  } catch (error) {
+    logger.error(`Error while reading Mongo schema endpoint: ${error.message}`);
+    return res.status(500).json({
+      error: 'Could not load database schema'
+    });
+  }
+});
+
 const socketHandler = new SocketHandler({ wss, logger, gameService: null });
 const gameService = new GameService({
     game,
