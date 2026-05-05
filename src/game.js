@@ -12,11 +12,11 @@ class Game {
         this.state = 'play'; // wait, play, finish
         this.FirstLevel = new Level('first_level');
         this.SecondLevel = new Level('second_level');
-        this.currentLevel = this.SecondLevel;
+        this.currentLevel = this.FirstLevel;
         this.levelJustChanged = false;
         this.gameEngine = new GameEngine(this.playerRegistry, this.currentLevel);
         this.allPlayersJustDisconnected = false;
-        this.secondLevelJustCompleted = false;
+        this.pendingLevelCompletionEvent = null;
     }
 
     getPlayerRegistry() {
@@ -86,23 +86,27 @@ class Game {
             if (allPlayersCompletedLevel) {
                 logger.info('All players have completed the level!');
 
-                // Marcamos evento antes de cambiar de nivel para saber qué nivel se completó realmente.
-                if (this.currentLevel.getName() === 'second_level') {
-                    this.secondLevelJustCompleted = true;
-                }
+                // Guardamos un evento consumible antes de resetear game states, para no perder
+                // el hecho de que este nivel se completó y por qué jugadores.
+                this.pendingLevelCompletionEvent = {
+                    completedLevelName: this.currentLevel.getName(),
+                    playerIds: this.playerRegistry.getPlayersSnapshot().map(player => player.getId()),
+                    completedAt: new Date()
+                };
 
                 this.handleChangingLevel();
             }
         }
     }
 
-    consumeSecondLevelCompletionEvent() {
-        if (!this.secondLevelJustCompleted) {
-            return false;
+    consumeLevelCompletionEvent() {
+        if (!this.pendingLevelCompletionEvent) {
+            return null;
         }
 
-        this.secondLevelJustCompleted = false;
-        return true;
+        const event = this.pendingLevelCompletionEvent;
+        this.pendingLevelCompletionEvent = null;
+        return event;
     }
     
     handleChangingLevel() {

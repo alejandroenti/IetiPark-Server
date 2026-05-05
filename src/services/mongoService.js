@@ -150,6 +150,37 @@ class MongoService {
             created: playerDoc._id === generatedId
         };
     }
+
+    /**
+     * Incrementa en +1 el contador de partidas superadas para cada jugador indicado.
+     *
+     * @param {string[]} playerIds
+     * @returns {Promise<number>} número de documentos modificados
+     */
+    async incrementCompletedGamesForPlayers(playerIds) {
+        if (!Array.isArray(playerIds) || playerIds.length === 0) {
+            return 0;
+        }
+
+        const normalizedUniqueIds = [...new Set(
+            playerIds
+                .filter(id => typeof id === 'string')
+                .map(id => id.trim())
+                .filter(Boolean)
+        )];
+
+        if (normalizedUniqueIds.length === 0) {
+            return 0;
+        }
+
+        const players = await this.createCollection('players');
+        const result = await players.updateMany(
+            { _id: { $in: normalizedUniqueIds } },
+            { $inc: { quantitat_de_partidas: 1 } }
+        );
+
+        return result.modifiedCount;
+    }
 }
 
 module.exports = MongoService;

@@ -165,7 +165,7 @@ initializeMongo();
 
 setInterval(async () => {
     game.update();
-    await gameService.handleSecondLevelCompletionIfNeeded();
+  await gameService.handleLevelCompletionEventIfNeeded();
     socketHandler.broadcast('GAME STATE', getGameState());
     if (game.levelJustChanged) {
         socketHandler.broadcast('LEVEL CHANGED', game.currentLevel.getName());

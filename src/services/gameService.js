@@ -18,6 +18,9 @@ class GameService {
         this.sendMessage = sendMessage;
         this.broadcast = broadcast;
         this.currentGameStartDate = null;
+        this.currentGameId = null;
+        this.playerLevelStartByPlayerId = new Map();
+        this.levelIdByLevelNameCache = new Map();
     }
 
     get playerRegistry() {
@@ -77,6 +80,8 @@ class GameService {
             this.startGameIfNeeded();
         }
 
+        this.ensurePlayerLevelStart(newPlayer.getId());
+
         this.sendMessage(ws, 'ACCEPTED JOIN', null);
         this.notifyPlayersUpdated();
         this.handleGameState();
@@ -133,8 +138,10 @@ class GameService {
             return;
         }
 
+        this.currentGameId = crypto.randomUUID();
         this.currentGameStartDate = new Date();
-        this.logger.info(`A new game has started at ${this.currentGameStartDate.toISOString()}`);
+        this.playerLevelStartByPlayerId.clear();
+        this.logger.info(`A new game has started at ${this.currentGameStartDate.toISOString()} (gameId=${this.currentGameId})`);
     }
 
     async finishCurrentGameIfNeeded() {
@@ -144,28 +151,120 @@ class GameService {
 
         const startDate = this.currentGameStartDate;
         const endDate = new Date();
+        const gameId = this.currentGameId || crypto.randomUUID();
 
         try {
             const games = await this.mongoService.getCollection('games');
             await games.insertOne({
-                _id: crypto.randomUUID(),
+                _id: gameId,
                 hora_de_comencament_de_la_partida: startDate,
                 hora_de_finalitzacio_de_la_partida: endDate
             });
 
             this.logger.info(`Game saved in MongoDB (start=${startDate.toISOString()}, end=${endDate.toISOString()})`);
             this.currentGameStartDate = null;
+            this.currentGameId = null;
+            this.playerLevelStartByPlayerId.clear();
         } catch (error) {
             this.logger.error(`Error saving game in MongoDB: ${error.message}`);
         }
     }
 
-    async handleSecondLevelCompletionIfNeeded() {
-        if (!this.game.consumeSecondLevelCompletionEvent()) {
+    ensurePlayerLevelStart(playerId, date = new Date()) {
+        if (!this.playerLevelStartByPlayerId.has(playerId)) {
+            this.playerLevelStartByPlayerId.set(playerId, date);
+        }
+    }
+
+    markCurrentLevelStartForAllPlayers(date = new Date()) {
+        this.playerLevelStartByPlayerId.clear();
+        for (const player of this.playerRegistry.getPlayersSnapshot()) {
+            this.playerLevelStartByPlayerId.set(player.getId(), date);
+        }
+    }
+
+    mapEstimatedSecondsFromLevelName(levelName) {
+        if (levelName === 'first_level') {
+            return 60;
+        }
+
+        if (levelName === 'second_level') {
+            return 120;
+        }
+
+        throw new Error(`Unknown levelName '${levelName}' while resolving level id`);
+    }
+
+    async getLevelIdForLevelName(levelName) {
+        if (this.levelIdByLevelNameCache.has(levelName)) {
+            return this.levelIdByLevelNameCache.get(levelName);
+        }
+
+        const estimatedSeconds = this.mapEstimatedSecondsFromLevelName(levelName);
+        const levels = await this.mongoService.getCollection('levels');
+        const levelDoc = await levels.findOne({ estimacio_del_temps_per_a_completar_lo: estimatedSeconds });
+
+        if (!levelDoc) {
+            throw new Error(`Level not found in MongoDB for expected duration ${estimatedSeconds}s`);
+        }
+
+        const levelId = levelDoc._id || levelDoc.id;
+        this.levelIdByLevelNameCache.set(levelName, levelId);
+        return levelId;
+    }
+
+    async savePlayerLevelCompletion({ playerId, levelName, completedAt }) {
+        const levelStartDate = this.playerLevelStartByPlayerId.get(playerId) || this.currentGameStartDate || completedAt;
+        const levelEndDate = completedAt;
+        const elapsedSeconds = Math.max(0, Math.round((levelEndDate.getTime() - levelStartDate.getTime()) / 1000));
+        const levelId = await this.getLevelIdForLevelName(levelName);
+
+        const playersLevels = await this.mongoService.getCollection('players_levels');
+        await playersLevels.insertOne({
+            _id: crypto.randomUUID(),
+            temps_en_superar_el_nivell: elapsedSeconds,
+            hora_a_que_ha_comencat_el_nivell: levelStartDate,
+            hora_a_que_s_ha_superat_el_nivell: levelEndDate,
+            id_partida: this.currentGameId,
+            id_jugador: playerId,
+            id_nivell: levelId
+        });
+
+        this.logger.info(`Saved players_levels row (playerId=${playerId}, level=${levelName}, elapsedSeconds=${elapsedSeconds})`);
+    }
+
+    async handleLevelCompletionEventIfNeeded() {
+        const event = this.game.consumeLevelCompletionEvent();
+        if (!event) {
             return;
         }
 
-        await this.finishCurrentGameIfNeeded();
+        const { completedLevelName, playerIds, completedAt } = event;
+
+        for (const playerId of playerIds) {
+            try {
+                await this.savePlayerLevelCompletion({
+                    playerId,
+                    levelName: completedLevelName,
+                    completedAt
+                });
+            } catch (error) {
+                this.logger.error(`Error saving players_levels for playerId=${playerId}: ${error.message}`);
+            }
+        }
+
+        this.markCurrentLevelStartForAllPlayers(new Date());
+
+        if (completedLevelName === 'second_level') {
+            try {
+                const updatedPlayers = await this.mongoService.incrementCompletedGamesForPlayers(playerIds);
+                this.logger.info(`Updated completed games counter in players collection (modified=${updatedPlayers})`);
+            } catch (error) {
+                this.logger.error(`Error incrementing completed games in players collection: ${error.message}`);
+            }
+
+            await this.finishCurrentGameIfNeeded();
+        }
     }
 
     /**
